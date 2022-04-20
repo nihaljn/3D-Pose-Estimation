@@ -14,13 +14,12 @@ class Args:
     dataset_path = 'data/data_3d_humaneva15.npz'
     dataset_2d_path = 'data/data_2d_humaneva15_gt.npz'
     subjects_train = 'Train/S1,Train/S2,Train/S3'.split(',')
-    subjects_test = 'Validate/S1,Validate/S2,Validate/S3'.split(',')
     actions_train = 'Walk,Jog,Box'.split(',')
     subjects_val = 'Validate/S1,Validate/S2,Validate/S3'.split(',')
     actions_val = actions_train
-    n_epochs = 50
+    n_epochs = 100
     batch_size = 128
-    wandb = False
+    wandb = True
     visualize_frame = True
     viz_dir = 'data/visuals/'
     

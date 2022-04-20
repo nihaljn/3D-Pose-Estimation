@@ -40,6 +40,7 @@ def train(n_epochs, epoch, step_cnt, dataloader, criterion, device, model, optim
         target = batch[1].to(device)
         preds = model(model_inp)
         loss = criterion(preds, target)
+        print(model_inp.shape, target.shape, preds.shape)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
