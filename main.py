@@ -2,6 +2,7 @@ import numpy as np
 import os
 import torch
 from torch.utils.data import DataLoader
+import wandb
 
 from camera import world_to_camera, normalize_screen_coordinates
 from humaneva_dataset import HumanEvaDataset
@@ -17,7 +18,7 @@ class Args:
     actions_train = 'Walk,Jog,Box'.split(',')
     subjects_val = 'Validate/S1,Validate/S2,Validate/S3'.split(',')
     actions_val = actions_train
-    n_epochs = 100
+    n_epochs = 500
     batch_size = 128
     wandb = True
     visualize_frame = True
@@ -99,10 +100,10 @@ def main():
     criterion = mpjpe
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model = FrameModel(n_joints=15, linear_size=1024).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     
     run(args.n_epochs, train_dataloader, val_dataloader, criterion, device, model, optimizer, 
-        wandb=args.wandb, visualize_frame=args.visualize_frame, dataset=val_dataset, output_dir=args.viz_dir)
+        use_wandb=args.wandb, visualize_frame=args.visualize_frame, dataset=val_dataset, output_dir=args.viz_dir)
     torch.save(model, 'data/model.pth')
     return
     

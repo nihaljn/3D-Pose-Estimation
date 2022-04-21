@@ -1,7 +1,8 @@
 tmp.gif
+wandb/
 **/.ipynb_checkpoints/
 **/__pycache__/
 archive/
 data/
 scratch.ipynb
-
+scratch_eval.ipynb
