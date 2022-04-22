@@ -24,7 +24,13 @@ def world_to_camera(X, R, t):
 def camera_to_world(X, R, t):
     return wrap(qrot, np.tile(R, (*X.shape[:-1], 1)), X) + t
 
-    
+
+def camera_to_camera(X, R1, t1, R2, t2):
+    world = camera_to_world(X, R1, t1)
+    camera = world_to_camera(world, R2, t2)
+    return camera
+
+
 def project_to_2d(X, camera_params):
     """
     Project 3D points to 2D using the Human3.6M camera projection function.
@@ -56,6 +62,7 @@ def project_to_2d(X, camera_params):
     XXX = XX*(radial + tan) + p*r2
     
     return f*XXX + c
+
 
 def project_to_2d_linear(X, camera_params):
     """

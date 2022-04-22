@@ -1,6 +1,6 @@
 import os
 import torch
-from visualization import visualize
+from external.visualization import visualize
 import wandb
 
 def validate(epoch, dataloader, criterion, device, model, visualize_frame=False, dataset=None, output_fp=None):

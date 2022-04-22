@@ -1,12 +1,14 @@
 import numpy as np
 import os
 import torch
+import sys
 from torch.utils.data import DataLoader
 import wandb
+sys.path.append(os.getcwd())
 
-from camera import world_to_camera, normalize_screen_coordinates
-from humaneva_dataset import HumanEvaDataset
-from loss import mpjpe
+from external.camera import world_to_camera, normalize_screen_coordinates
+from external.humaneva_dataset import HumanEvaDataset
+from external.loss import mpjpe
 from model import FrameModel
 from run import run
 from preprocessed_dataset import PreprocessedDataset

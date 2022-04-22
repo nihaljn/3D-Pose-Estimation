@@ -11,18 +11,30 @@ humaneva_skeleton = Skeleton(parents=[-1, 0, 1, 2, 3, 1, 5, 6, 0, 8, 9, 0, 11, 1
 humaneva_cameras_intrinsic_params = [
     {
         'id': 'C1',
+        'center': [299.773675, 232.347455],
+        'focal_length': [765.789418, 765.330306],
+        'radial_distortion': [-0.289415, 0.105962, 0.000000],
+        'tangential_distortion': [-0.001358, 0.001130],
         'res_w': 640,
         'res_h': 480,
         'azimuth': 0, # Only used for visualization
     },
     {
         'id': 'C2',
+        'center': [273.089872, 221.974930],
+        'focal_length': [688.411220, 686.786141],
+        'radial_distortion': [-0.322126, 0.095221, 0.000000],
+        'tangential_distortion': [0.000239, -0.007034],
         'res_w': 640,
         'res_h': 480,
         'azimuth': -90, # Only used for visualization
     },
     {
         'id': 'C3',
+        'center': [302.629652, 204.912033],
+        'focal_length': [724.267662, 723.569727],
+        'radial_distortion': [-0.327556, 1.277065, 0.000000],
+        'tangential_distortion': [-0.006537, -0.005360],
         'res_w': 640,
         'res_h': 480,
         'azimuth': 90, # Only used for visualization
