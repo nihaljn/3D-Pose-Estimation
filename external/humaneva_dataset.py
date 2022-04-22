@@ -1,8 +1,8 @@
 import numpy as np
 import copy
-from skeleton import Skeleton
-from mocap_dataset import MocapDataset
-from camera import normalize_screen_coordinates, image_coordinates
+from external.skeleton import Skeleton
+from external.mocap_dataset import MocapDataset
+from external.camera import normalize_screen_coordinates, image_coordinates
        
 humaneva_skeleton = Skeleton(parents=[-1, 0, 1, 2, 3, 1, 5, 6, 0, 8, 9, 0, 11, 12, 1],
        joints_left=[2, 3, 4, 8, 9, 10],

@@ -1,12 +1,12 @@
 import matplotlib
 matplotlib.use('Agg')
-
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, writers
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import subprocess as sp
-from camera import image_coordinates, camera_to_world
+
+from external.camera import image_coordinates, camera_to_world
 
 
 def visualize(points_2d, gt_points_3d, pred_points_3d, points_2d_metadata, cam, skeleton, fps, output_fp):

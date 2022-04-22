@@ -1,5 +1,5 @@
 import numpy as np
-from skeleton import Skeleton
+from external.skeleton import Skeleton
 
 class MocapDataset:
     def __init__(self, fps, skeleton):

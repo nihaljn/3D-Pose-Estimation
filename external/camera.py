@@ -1,8 +1,8 @@
 import numpy as np
 import torch
 
-from utils import wrap
-from quaternion import qrot, qinverse
+from external.utils import wrap
+from external.quaternion import qrot, qinverse
 
 def normalize_screen_coordinates(X, w, h): 
     assert X.shape[-1] == 2

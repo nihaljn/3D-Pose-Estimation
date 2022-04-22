@@ -4,11 +4,10 @@ import torch
 import sys
 from torch.utils.data import DataLoader
 import wandb
-sys.path.append(os.getcwd())
 
 from external.camera import world_to_camera, normalize_screen_coordinates
 from external.humaneva_dataset import HumanEvaDataset
-from external.loss import mpjpe
+from loss import mpjpe
 from model import FrameModel
 from run import run
 from preprocessed_dataset import PreprocessedDataset
