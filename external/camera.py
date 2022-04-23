@@ -8,7 +8,7 @@ def normalize_screen_coordinates(X, w, h, pt=True):
     assert X.shape[-1] == 2
     # Normalize so that [0, w] is mapped to [-1, 1], while preserving the aspect ratio
     if pt:
-        return X/w*2 - torch.tensor([1, h/w])
+        return X/w*2 - torch.tensor([1, h/w]).to(X.device)
     else:
         return X/w*2 - [1, h/w]
 

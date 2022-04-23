@@ -1,4 +1,6 @@
 import numpy as np
+import torch
+import random
 
 from external.humaneva_dataset import humaneva_cameras_intrinsic_params as intrinsic_camera_params
 from external.humaneva_dataset import humaneva_cameras_extrinsic_params as extrinsic_camera_params
@@ -19,6 +21,17 @@ cam_info_to_idx = {
     'orientation': [11, 12, 13, 14],
     'translation': [15, 16, 17]
 }
+
+
+def set_seed(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+
 
 def convert_cam_to_viz_dict(cam, cam_idx):
     d = {

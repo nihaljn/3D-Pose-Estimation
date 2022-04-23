@@ -41,19 +41,27 @@ def train(n_epochs, epoch, step_cnt, dataloader, criterion, device, model, optim
     batch_cnt = 0
     for pose_2d, pose_3d, cameras in dataloader:
         cam0_2d, cam1_2d, cam2_2d = pose_2d[0].to(device), pose_2d[1].to(device), pose_2d[2].to(device)
-        cam0_3d_pred = model(cam0_2d)        
-        cam1_3d_pred = model(cam1_2d)
-        cam2_3d_pred = model(cam2_2d)
+        cameras[0], cameras[1], cameras[2] = cameras[0].to(device), cameras[1].to(device), cameras[2].to(device)
+        n_batch = cam0_2d.shape[0]
+        all_cam_2d = torch.cat((cam0_2d, cam1_2d, cam2_2d), dim=0)
+        all_cam_3d_pred = model(all_cam_2d)
+        cam0_3d_pred = all_cam_3d_pred[:n_batch]
+        cam1_3d_pred = all_cam_3d_pred[n_batch:2*n_batch]
+        cam2_3d_pred = all_cam_3d_pred[2*n_batch:]
         
         losses = []
         for idx in range(cam0_2d.shape[0]):
             cam0, cam1, cam2 = cameras[0][idx:idx+1], cameras[1][idx:idx+1], cameras[2][idx:idx+1]
-            cur_loss = criterion(cam0_3d_pred[idx:idx+1], cam1_2d[idx:idx+1], cam2_2d[idx:idx+1], cam0, cam1, cam2)
-            losses.append(cur_loss)
-            cur_loss = criterion(cam1_3d_pred[idx:idx+1], cam0_2d[idx:idx+1], cam2_2d[idx:idx+1], cam1, cam0, cam2)
-            losses.append(cur_loss)
-            cur_loss = criterion(cam2_3d_pred[idx:idx+1], cam0_2d[idx:idx+1], cam1_2d[idx:idx+1], cam2, cam0, cam1)
-            losses.append(cur_loss)
+            cam_idx = torch.randint(0, 3, (1, )).item()
+            if cam_idx == 0:
+                cur_loss = criterion(cam0_3d_pred[idx:idx+1], cam1_2d[idx:idx+1], cam2_2d[idx:idx+1], cam0, cam1, cam2)
+                losses.append(cur_loss)
+            elif cam_idx == 1:
+                cur_loss = criterion(cam1_3d_pred[idx:idx+1], cam0_2d[idx:idx+1], cam2_2d[idx:idx+1], cam1, cam0, cam2)
+                losses.append(cur_loss)
+            else:
+                cur_loss = criterion(cam2_3d_pred[idx:idx+1], cam0_2d[idx:idx+1], cam1_2d[idx:idx+1], cam2, cam0, cam1)
+                losses.append(cur_loss)
         
         loss = sum(losses) / len(losses)    
         optimizer.zero_grad()

@@ -11,7 +11,7 @@ from loss import projection_loss
 from model import FrameModel
 from run import run
 from dataset import MultiViewDataset
-from utils import fetch_multiview
+from utils import fetch_multiview, set_seed
 
 
 class Args:
@@ -26,10 +26,12 @@ class Args:
     wandb = False
     visualize_frame = False
     viz_dir = 'data/visuals/'
+    seed = 982356147
     
     
 def main():
     args = Args()
+    set_seed(args.seed)
     if args.wandb:
         wandb.init(project="vlr_project", reinit=True)
     he_dataset = HumanEvaDataset(args.dataset_path)
@@ -68,11 +70,11 @@ def main():
     
     train_dataset = MultiViewDataset(poses_train_2d, poses_train_3d, cameras_train, 
                                  keypoints_metadata, he_dataset.skeleton(), he_dataset.fps())
-    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0)
+    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=2)
     
     val_dataset = MultiViewDataset(poses_val_2d, poses_val_3d, cameras_val, 
                                  keypoints_metadata, he_dataset.skeleton(), he_dataset.fps())
-    val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=0)
+    val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=2)
     
     criterion = projection_loss
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
