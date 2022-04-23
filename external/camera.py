@@ -4,16 +4,22 @@ import torch
 from external.utils import wrap
 from external.quaternion import qrot, qinverse
 
-def normalize_screen_coordinates(X, w, h): 
+def normalize_screen_coordinates(X, w, h, pt=True): 
     assert X.shape[-1] == 2
     # Normalize so that [0, w] is mapped to [-1, 1], while preserving the aspect ratio
-    return X/w*2 - [1, h/w]
+    if pt:
+        return X/w*2 - torch.tensor([1, h/w])
+    else:
+        return X/w*2 - [1, h/w]
 
     
-def image_coordinates(X, w, h):
+def image_coordinates(X, w, h, pt=True):
     assert X.shape[-1] == 2
     # Reverse camera frame normalization
-    return (X + [1, h/w])*w/2
+    if pt:
+        return (X + torch.tensor([1, h/w]))*w/2
+    else:
+        raise NotImplementedError
     
 
 def world_to_camera(X, R, t):
@@ -25,9 +31,24 @@ def camera_to_world(X, R, t):
     return wrap(qrot, np.tile(R, (*X.shape[:-1], 1)), X) + t
 
 
+def torch_world_to_camera(X, R, t):
+    Rt = qinverse(R)
+    return qrot(torch.tile(Rt, (*X.shape[:-1], 1)), X - t)
+
+
+def torch_camera_to_world(X, R, t):
+    return qrot(torch.tile(R, (*X.shape[:-1], 1)), X) + t
+
+
 def camera_to_camera(X, R1, t1, R2, t2):
     world = camera_to_world(X, R1, t1)
     camera = world_to_camera(world, R2, t2)
+    return camera
+
+
+def torch_camera_to_camera(X, R1, t1, R2, t2):
+    world = torch_camera_to_world(X, R1, t1)
+    camera = torch_world_to_camera(world, R2, t2)
     return camera
 
 

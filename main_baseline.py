@@ -7,11 +7,11 @@ import wandb
 
 from external.camera import world_to_camera, normalize_screen_coordinates
 from external.humaneva_dataset import HumanEvaDataset
-from loss import projection_loss
+from loss import mpjpe
 from model import FrameModel
-from run import run
-from dataset import MultiViewDataset
-from utils import fetch_multiview
+from run import run_baseline
+from dataset import FrameDataset
+from utils import fetch
 
 
 class Args:
@@ -23,8 +23,8 @@ class Args:
     actions_val = actions_train
     n_epochs = 500
     batch_size = 128
-    wandb = False
-    visualize_frame = False
+    wandb = True
+    visualize_frame = True
     viz_dir = 'data/visuals/'
     
     
@@ -63,18 +63,17 @@ def main():
                 kps[..., :2] = normalize_screen_coordinates(kps[..., :2], w=cam['res_w'], h=cam['res_h'], pt=False)
                 keypoints[subject][action][cam_idx] = kps
                 
-    poses_train_3d, poses_train_2d, cameras_train = fetch_multiview(args.subjects_train, keypoints, he_dataset, args.actions_train)
-    poses_val_3d, poses_val_2d, cameras_val = fetch_multiview(args.subjects_val, keypoints, he_dataset, args.actions_val)
+    poses_train_3d, poses_train_2d, cameras_train = fetch(args.subjects_train, keypoints, he_dataset, args.actions_train)
+    poses_val_3d, poses_val_2d, cameras_val = fetch(args.subjects_val, keypoints, he_dataset, args.actions_val)
     
-    train_dataset = MultiViewDataset(poses_train_2d, poses_train_3d, cameras_train, 
-                                 keypoints_metadata, he_dataset.skeleton(), he_dataset.fps())
-    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0)
+    train_dataset = FrameDataset(poses_train_2d, poses_train_3d, cameras_train, 
+                                        keypoints_metadata, he_dataset.skeleton(), he_dataset.fps())
+    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=0, shuffle=True)
+    val_dataset = FrameDataset(poses_val_2d, poses_val_3d, cameras_val,
+                                      keypoints_metadata, he_dataset.skeleton(), he_dataset.fps())
+    val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=0, shuffle=False)
     
-    val_dataset = MultiViewDataset(poses_val_2d, poses_val_3d, cameras_val, 
-                                 keypoints_metadata, he_dataset.skeleton(), he_dataset.fps())
-    val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=0)
-    
-    criterion = projection_loss
+    criterion = mpjpe
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model = FrameModel(n_joints=15, linear_size=1024).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)

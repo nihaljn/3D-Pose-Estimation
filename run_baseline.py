@@ -1,61 +1,48 @@
 import os
 import torch
-import wandb
-
 from external.visualization import visualize
-from utils import convert_cam_to_viz_dict
-from loss import mpjpe
-
+import wandb
 
 def validate(epoch, dataloader, criterion, device, model, visualize_frame=False, dataset=None, output_fp=None):
     total_loss = 0
     batch_cnt = 0
-    for pose_2d, pose_3d, cameras in dataloader:
-        cam0_2d, cam1_2d, cam2_2d = pose_2d[0].to(device), pose_2d[1].to(device), pose_2d[2].to(device)
+    for batch in dataloader:
+        model_inp = batch[0].to(device)
+        target = batch[1].to(device)
         with torch.no_grad():
-            cam0_3d_pred = model(cam0_2d)
-            cam1_3d_pred = model(cam1_2d)
-            cam2_3d_pred = model(cam2_2d)
-        cam0_3d_targ, cam1_3d_targ, cam2_3d_targ = pose_3d[0].to(device), pose_3d[1].to(device), pose_3d[2].to(device)
-        loss = mpjpe(cam0_3d_pred, cam0_3d_targ) + mpjpe(cam1_3d_pred, cam1_3d_targ) + mpjpe(cam2_3d_pred, cam2_3d_targ)
-        total_loss += (loss/3).cpu().item()
+            preds = model(model_inp)
+        loss = criterion(preds, target)
+        total_loss += loss.cpu().item()
         batch_cnt += 1
     
     if visualize_frame:
         assert dataset != None, 'Need dataset object to visualize'
         assert output_fp != None, 'Need path to visualization output file'
         idx = 12
-        data_2d = pose_2d[0][idx].unsqueeze(0).numpy()
-        pred_3d = cam0_3d_pred[idx].unsqueeze(0).cpu().numpy()
-        targ_3d = pose_3d[0][idx].unsqueeze(0).numpy()
-        cam = convert_cam_to_viz_dict(cameras[0][idx], 0)
+        data_2d = batch[0][idx].unsqueeze(0).numpy()
+        pred_3d = preds[idx].unsqueeze(0).cpu().numpy()
+        targ_3d = batch[1][idx].unsqueeze(0).numpy()
+        cam = {key: val[idx] for key, val in batch[2].items()}
+        cam['orientation'] = cam['orientation'].numpy()
+        cam['translation'] = cam['translation'].numpy()
+        cam['res_w'] = cam['res_w'].item()
+        cam['res_h'] = cam['res_h'].item()
+        cam['azimuth'] = cam['azimuth'].item()
         visualize(data_2d.copy(), targ_3d.copy(), pred_3d.copy(), 
                   dataset.keypoints_metadata, cam, dataset.skeleton, 
                   dataset.fps, output_fp=output_fp)
     
     return total_loss / batch_cnt
 
-
 def train(n_epochs, epoch, step_cnt, dataloader, criterion, device, model, optimizer):
     total_loss = 0
     batch_cnt = 0
-    for pose_2d, pose_3d, cameras in dataloader:
-        cam0_2d, cam1_2d, cam2_2d = pose_2d[0].to(device), pose_2d[1].to(device), pose_2d[2].to(device)
-        cam0_3d_pred = model(cam0_2d)        
-        cam1_3d_pred = model(cam1_2d)
-        cam2_3d_pred = model(cam2_2d)
-        
-        losses = []
-        for idx in range(cam0_2d.shape[0]):
-            cam0, cam1, cam2 = cameras[0][idx:idx+1], cameras[1][idx:idx+1], cameras[2][idx:idx+1]
-            cur_loss = criterion(cam0_3d_pred[idx:idx+1], cam1_2d[idx:idx+1], cam2_2d[idx:idx+1], cam0, cam1, cam2)
-            losses.append(cur_loss)
-            cur_loss = criterion(cam1_3d_pred[idx:idx+1], cam0_2d[idx:idx+1], cam2_2d[idx:idx+1], cam1, cam0, cam2)
-            losses.append(cur_loss)
-            cur_loss = criterion(cam2_3d_pred[idx:idx+1], cam0_2d[idx:idx+1], cam1_2d[idx:idx+1], cam2, cam0, cam1)
-            losses.append(cur_loss)
-        
-        loss = sum(losses) / len(losses)    
+    for batch in dataloader:
+        model_inp = batch[0].to(device)
+        target = batch[1].to(device)
+        preds = model(model_inp)
+        loss = criterion(preds, target)
+        # print(model_inp.shape, target.shape, preds.shape)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -79,7 +66,7 @@ def run(n_epochs, train_loader, val_loader, criterion, device, model, optimizer,
         if use_wandb:
             wandb.log({'train/loss': train_loss, 'epoch': epoch, 'step_cnt': step_cnt[0]})
             
-        # # Validation
+        # Validation
         model.eval()
         if output_dir != None:
             output_fp = os.path.join(output_dir, f'epoch_{epoch}.gif')
