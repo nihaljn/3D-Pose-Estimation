@@ -53,14 +53,20 @@ def train(n_epochs, epoch, step_cnt, dataloader, criterion, device, model, optim
         for idx in range(cam0_2d.shape[0]):
             cam0, cam1, cam2 = cameras[0][idx:idx+1], cameras[1][idx:idx+1], cameras[2][idx:idx+1]
             cam_idx = torch.randint(0, 3, (1, )).item()
-            if cam_idx == 0:
-                cur_loss = criterion(cam0_3d_pred[idx:idx+1], cam1_2d[idx:idx+1], cam2_2d[idx:idx+1], cam0, cam1, cam2)
+            if cam_idx == 0 or True:
+                # recon = cam0_2d[idx:idx+1]
+                recon = None
+                cur_loss = criterion(cam0_3d_pred[idx:idx+1], cam1_2d[idx:idx+1], cam2_2d[idx:idx+1], cam0, cam1, cam2, recon)
                 losses.append(cur_loss)
-            elif cam_idx == 1:
-                cur_loss = criterion(cam1_3d_pred[idx:idx+1], cam0_2d[idx:idx+1], cam2_2d[idx:idx+1], cam1, cam0, cam2)
+            if cam_idx == 1 or True:
+                # recon = cam1_2d[idx:idx+1]
+                recon = None
+                cur_loss = criterion(cam1_3d_pred[idx:idx+1], cam0_2d[idx:idx+1], cam2_2d[idx:idx+1], cam1, cam0, cam2, recon)
                 losses.append(cur_loss)
-            else:
-                cur_loss = criterion(cam2_3d_pred[idx:idx+1], cam0_2d[idx:idx+1], cam1_2d[idx:idx+1], cam2, cam0, cam1)
+            if cam_idx == 2 or True:
+                # recon = cam2_2d[idx:idx+1]
+                recon = None
+                cur_loss = criterion(cam2_3d_pred[idx:idx+1], cam0_2d[idx:idx+1], cam1_2d[idx:idx+1], cam2, cam0, cam1, recon)
                 losses.append(cur_loss)
         
         loss = sum(losses) / len(losses)    

@@ -37,16 +37,18 @@ def convert_cam_to_viz_dict(cam, cam_idx):
     d = {
         'orientation': cam[[11, 12, 13, 14]].numpy(),
         'translation': cam[[15, 16, 17]].numpy(),
-        'res_w': cam[9].item(),
-        'res_h': cam[10].item(),
-        'azimuth': 0
+        'res_w': int(cam[9].item()),
+        'res_h': int(cam[10].item())
     }
     if cam_idx == 1:
         d['azimuth'] = -90
     elif cam_idx == 2:
         d['azimuth'] = 90
+    elif cam_idx == 0:
+        d['azimuth'] = 0
     else:
         raise ValueError
+    return d
 
 
 def fetch(subjects, keypoints, dataset, action_filter):

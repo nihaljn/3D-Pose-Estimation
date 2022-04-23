@@ -9,7 +9,7 @@ from external.camera import world_to_camera, normalize_screen_coordinates
 from external.humaneva_dataset import HumanEvaDataset
 from loss import mpjpe
 from model import FrameModel
-from run import run_baseline
+from run_baseline import run
 from dataset import FrameDataset
 from utils import fetch
 
@@ -23,7 +23,7 @@ class Args:
     actions_val = actions_train
     n_epochs = 500
     batch_size = 128
-    wandb = True
+    wandb = False
     visualize_frame = True
     viz_dir = 'data/visuals/'
     

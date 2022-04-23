@@ -17,7 +17,7 @@ def visualize(points_2d, gt_points_3d, pred_points_3d, points_2d_metadata, cam, 
     gt_points_3d = camera_to_world(gt_points_3d, R=cam['orientation'], t=cam['translation'])
     anim_output = {'Reconstruction': pred_points_3d, 'Ground Truth': gt_points_3d}
     
-    points_2d = image_coordinates(points_2d[..., :2], w=cam['res_w'], h=cam['res_h'])
+    points_2d = image_coordinates(points_2d[..., :2], w=cam['res_w'], h=cam['res_h'], pt=False)
     
     render_animation(points_2d, points_2d_metadata, anim_output,
                      skeleton, fps, bitrate=3000, azim=cam['azimuth'], output=output_fp,

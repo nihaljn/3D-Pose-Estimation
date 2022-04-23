@@ -14,7 +14,7 @@ class FrameDataset(Dataset):
         if mode == 'frame':
             cameras = []
             for i in range(len(self.pose_3d)):
-                cameras += [self.cameras[i] for _ in range(self.pose_3d[i].shape[0])]
+                cameras += [self.cameras_intrinsics[i] for _ in range(self.pose_3d[i].shape[0])]
             self.cameras = cameras
             self.keypoints_2d = np.concatenate(keypoints_2d, axis=0)
             self.pose_3d = np.concatenate(pose_3d, axis=0)

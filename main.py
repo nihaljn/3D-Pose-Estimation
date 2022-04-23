@@ -24,7 +24,7 @@ class Args:
     n_epochs = 500
     batch_size = 128
     wandb = False
-    visualize_frame = False
+    visualize_frame = True
     viz_dir = 'data/visuals/'
     seed = 982356147
     
@@ -78,7 +78,7 @@ def main():
     
     criterion = projection_loss
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    model = FrameModel(n_joints=15, linear_size=1024).to(device)
+    model = FrameModel(n_joints=15, linear_size=1024, dropout=0.5, n_blocks=3).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     
     run(args.n_epochs, train_dataloader, val_dataloader, criterion, device, model, optimizer, 

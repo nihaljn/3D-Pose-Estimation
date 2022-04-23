@@ -17,9 +17,9 @@ def image_coordinates(X, w, h, pt=True):
     assert X.shape[-1] == 2
     # Reverse camera frame normalization
     if pt:
-        return (X + torch.tensor([1, h/w]))*w/2
+        return (X + torch.tensor([1, h/w]).to(X.device))*w/2
     else:
-        raise NotImplementedError
+        return (X + [1, h/w])*w/2
     
 
 def world_to_camera(X, R, t):
