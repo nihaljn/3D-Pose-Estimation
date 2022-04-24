@@ -23,7 +23,7 @@ class Args:
     actions_val = actions_train
     n_epochs = 500
     batch_size = 128
-    wandb = False
+    wandb = True
     visualize_frame = True
     viz_dir = 'data/visuals/'
     seed = 982356147
@@ -78,12 +78,12 @@ def main():
     
     criterion = projection_loss
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    model = FrameModel(n_joints=15, linear_size=1024, dropout=0.5, n_blocks=3).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    model = FrameModel(n_joints=15, linear_size=1024, dropout=0.5, n_blocks=2).to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
     
     run(args.n_epochs, train_dataloader, val_dataloader, criterion, device, model, optimizer, 
         use_wandb=args.wandb, visualize_frame=args.visualize_frame, dataset=val_dataset, output_dir=args.viz_dir)
-    torch.save(model, 'data/model.pth')
+    torch.save(model, 'data/saved_models/last_checkpoint.pth')
     return
     
     

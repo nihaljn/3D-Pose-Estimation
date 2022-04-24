@@ -4,6 +4,17 @@ import torch
 from external.utils import wrap
 from external.quaternion import qrot, qinverse
 
+cam_info_to_idx = {
+    'focal_length': [0, 1],
+    'center': [2, 3],
+    'tangential_distortion': [4, 5, 6],
+    'radial_distortion': [7, 8],
+    'width': [9],
+    'height': [10],
+    'orientation': [11, 12, 13, 14],
+    'translation': [15, 16, 17]
+}
+
 def normalize_screen_coordinates(X, w, h, pt=True): 
     assert X.shape[-1] == 2
     # Normalize so that [0, w] is mapped to [-1, 1], while preserving the aspect ratio
@@ -50,6 +61,24 @@ def torch_camera_to_camera(X, R1, t1, R2, t2):
     world = torch_camera_to_world(X, R1, t1)
     camera = torch_world_to_camera(world, R2, t2)
     return camera
+
+
+def camera_3d_to_camera_2d(cam0_idx, cam0_3d, cam1_idx, cam0, cam1, fix_offset=True):
+    if fix_offset:
+        cam0_3d_tmp = cam0_3d.clone()
+        cam0_3d_tmp[:, 1:] += cam0_3d[:, :1]
+        cam0_3d = cam0_3d_tmp
+    if cam0_idx == cam1_idx:
+        cam1_3d = cam0_3d
+    else:
+        R0, t0 = cam0[0][cam_info_to_idx['orientation']], cam0[0][cam_info_to_idx['translation']]
+        R1, t1 = cam1[0][cam_info_to_idx['orientation']], cam1[0][cam_info_to_idx['translation']]
+        cam1_3d = torch_camera_to_camera(cam0_3d, R0, t0, R1, t1)
+    cam1_intrinsic = cam1[:1, :9]
+    cam1_2d_unnorm = project_to_2d(cam1_3d, cam1_intrinsic)
+    w1, h1 = cam1[0][cam_info_to_idx['width']].item(), cam1[0][cam_info_to_idx['height']].item()
+    cam1_2d = normalize_screen_coordinates(cam1_2d_unnorm, w=w1, h=h1)
+    return cam1_2d
 
 
 def project_to_2d(X, camera_params):
