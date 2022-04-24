@@ -7,11 +7,11 @@ import wandb
 
 from external.camera import world_to_camera, normalize_screen_coordinates
 from external.humaneva_dataset import HumanEvaDataset
-from loss import mpjpe
+from loss import mpjpe, weighted_mpjpe
 from model import FrameModel
 from run_baseline import run
 from dataset import FrameDataset
-from utils import fetch
+from utils import fetch, set_seed
 
 
 class Args:
@@ -21,17 +21,26 @@ class Args:
     actions_train = 'Walk,Jog,Box'.split(',')
     subjects_val = 'Validate/S1,Validate/S2,Validate/S3'.split(',')
     actions_val = actions_train
-    n_epochs = 500
+    n_epochs = 200
     batch_size = 128
     wandb = False
     visualize_frame = True
     viz_dir = 'data/visuals/'
+    model_dir = 'data/saved_models/'
+    seed = 982356147
+    weighted = False
     
     
 def main():
     args = Args()
+    set_seed(args.seed)
     if args.wandb:
         wandb.init(project="vlr_project", reinit=True)
+        run_name = wandb.run.name
+        args.viz_dir = os.path.join(args.viz_dir, run_name)
+        args.model_dir = os.path.join(args.model_dir, run_name)
+        os.mkdir(args.viz_dir)
+        os.mkdir(args.model_dir)
     he_dataset = HumanEvaDataset(args.dataset_path)
     
     # convert 3D pose world coordinates to camera coordinates
@@ -73,14 +82,15 @@ def main():
                                       keypoints_metadata, he_dataset.skeleton(), he_dataset.fps())
     val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, num_workers=0, shuffle=False)
     
-    criterion = mpjpe
+    criterion = weighted_mpjpe if args.weighted else mpjpe
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model = FrameModel(n_joints=15, linear_size=1024).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(model.parameters(), lr=5e-4)
     
     run(args.n_epochs, train_dataloader, val_dataloader, criterion, device, model, optimizer, 
-        use_wandb=args.wandb, visualize_frame=args.visualize_frame, dataset=val_dataset, output_dir=args.viz_dir)
-    torch.save(model, 'data/model.pth')
+        use_wandb=args.wandb, visualize_frame=args.visualize_frame, dataset=val_dataset, 
+        model_output_dir=args.model_dir, viz_output_dir=args.viz_dir, weighted=args.weighted)
+    torch.save(model, os.path.join(args.model_dir, 'last_checkpoint.pth'))
     return
     
     

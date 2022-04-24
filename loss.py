@@ -13,7 +13,26 @@ def mpjpe(predicted, target):
     return torch.mean(torch.norm(predicted - target, dim=len(target.shape)-1))
 
 
-def projection_loss(cam0_pred_3d, cam1_2d, cam2_2d, cam0, cam1, cam2, cam0_2d=None):
+def weighted_mpjpe(predicted, target, w):
+    """
+    Weighted mean per-joint position error (i.e. mean Euclidean distance)
+    """
+    assert predicted.shape == target.shape
+    assert w.shape[0] == predicted.shape[0]
+    return torch.mean(w * torch.norm(predicted - target, dim=len(target.shape)-1))
+
+
+def consistency_loss(cam0_2d, cam1_2d, cam2_2d):
+    '''
+    Loss to ensure that views from all cameras are the same.
+    cam0_2d, cam1_2d, cam2_2d are 2d projections in some (unknown) camera space (c)
+    cam0_2d is the projection of 3d pose from cam0 to 2d pose in c
+    '''
+    assert cam0_2d.shape == cam1_2d.shape and cam1_2d.shape == cam2_2d.shape
+    return (mpjpe(cam0_2d, cam1_2d) + mpjpe(cam0_2d, cam2_2d) + mpjpe(cam1_2d, cam2_2d)) / 3
+
+
+def projection_loss(cam0_pred_3d, cam1_2d, cam2_2d, cam0, cam1, cam2):
     '''
     Loss after projecting cam0_pred_3d to 2d in cam1 and cam2 space
     Args:
@@ -42,23 +61,5 @@ def projection_loss(cam0_pred_3d, cam1_2d, cam2_2d, cam0, cam1, cam2, cam0_2d=No
     w2, h2 = cam2[0][cam_info_to_idx['width']].item(), cam2[0][cam_info_to_idx['height']].item()
     cam1_pred_2d = normalize_screen_coordinates(cam1_pred_2d_unnorm, w=w1, h=h1)
     cam2_pred_2d = normalize_screen_coordinates(cam2_pred_2d_unnorm, w=w2, h=h2)
-    # cam1_2d = image_coordinates(cam1_2d[..., :2], w=w1, h=h1, pt=True)
-    # cam2_2d = image_coordinates(cam2_2d[..., :2], w=w2, h=h2, pt=True)
-    
-    # if cam0_2d != None:
-    #     cam0_intrinsic = cam0[:1, :9]
-    #     cam0_pred_2d_unnorm = project_to_2d(cam0_pred_3d_tmp.clone(), cam0_intrinsic)
-    #     w0, h0 = cam0[0][cam_info_to_idx['width']].item(), cam0[0][cam_info_to_idx['height']].item()
-    #     cam0_pred_2d = normalize_screen_coordinates(cam0_pred_2d_unnorm, w=w0, h=h0)
-    #     return (mpjpe(cam1_pred_2d, cam1_2d) + mpjpe(cam2_pred_2d, cam2_2d) + mpjpe(cam0_pred_2d, cam0_2d)) / 3
-    
-    # cam1_pred_2d_tmp = cam1_pred_2d.clone()
-    # cam1_pred_2d_tmp[:, 1:] -= cam1_pred_2d[:, :1]
-    # cam2_pred_2d_tmp = cam2_pred_2d.clone()
-    # cam2_pred_2d_tmp[:, 1:] -= cam2_pred_2d[:, :1]
-    # cam1_2d_tmp = cam1_2d.clone()
-    # cam1_2d_tmp[:, 1:] -= cam1_2d[:, :1]
-    # cam2_2d_tmp = cam2_2d.clone()
-    # cam2_2d_tmp[:, 1:] -= cam2_2d[:, :1]
     
     return (mpjpe(cam1_pred_2d, cam1_2d) + mpjpe(cam2_pred_2d, cam2_2d)) / 2

@@ -2,6 +2,7 @@ import os
 import torch
 from external.visualization import visualize
 import wandb
+from loss import mpjpe
 
 def validate(epoch, dataloader, criterion, device, model, visualize_frame=False, dataset=None, output_fp=None):
     total_loss = 0
@@ -11,7 +12,7 @@ def validate(epoch, dataloader, criterion, device, model, visualize_frame=False,
         target = batch[1].to(device)
         with torch.no_grad():
             preds = model(model_inp)
-        loss = criterion(preds, target)
+        loss = mpjpe(preds, target)
         total_loss += loss.cpu().item()
         batch_cnt += 1
     
@@ -34,14 +35,18 @@ def validate(epoch, dataloader, criterion, device, model, visualize_frame=False,
     
     return total_loss / batch_cnt
 
-def train(n_epochs, epoch, step_cnt, dataloader, criterion, device, model, optimizer):
+def train(n_epochs, epoch, step_cnt, dataloader, criterion, device, model, optimizer, weighted=False, output_fp=None):
     total_loss = 0
     batch_cnt = 0
     for batch in dataloader:
         model_inp = batch[0].to(device)
         target = batch[1].to(device)
         preds = model(model_inp)
-        loss = criterion(preds, target)
+        if not weighted:
+            loss = criterion(preds, target)
+        else:
+            w = 1 / torch.abs(target[:, :, 2]).clone() # inversely proportional to the depth
+            loss = criterion(preds, target, w)
         # print(model_inp.shape, target.shape, preds.shape)
         optimizer.zero_grad()
         loss.backward()
@@ -49,11 +54,12 @@ def train(n_epochs, epoch, step_cnt, dataloader, criterion, device, model, optim
         step_cnt[0] += 1
         total_loss += loss.cpu().item()
         batch_cnt += 1
+    torch.save(model, output_fp)
     return total_loss / batch_cnt
     
     
 def run(n_epochs, train_loader, val_loader, criterion, device, model, optimizer, use_wandb=False, 
-        visualize_frame=False, dataset=None, output_dir=None):
+        visualize_frame=False, dataset=None, model_output_dir=None, viz_output_dir=None, weighted=False):
     '''Train + Val'''
     step_cnt = [0] # as list to pass by reference
     
@@ -61,16 +67,18 @@ def run(n_epochs, train_loader, val_loader, criterion, device, model, optimizer,
         
         # Training
         model.train()
-        train_loss = train(n_epochs, epoch, step_cnt, train_loader, criterion, device, model, optimizer)
+        if model_output_dir != None:
+            output_fp = os.path.join(model_output_dir, f'epoch_{epoch}.pth')
+        train_loss = train(n_epochs, epoch, step_cnt, train_loader, criterion, device, model, optimizer, weighted, output_fp)
         print(f'Epoch {epoch}/{n_epochs}\tStep {step_cnt[0]}\tTrain Loss {train_loss:.4}')
         if use_wandb:
             wandb.log({'train/loss': train_loss, 'epoch': epoch, 'step_cnt': step_cnt[0]})
             
         # Validation
         model.eval()
-        if output_dir != None:
-            output_fp = os.path.join(output_dir, f'epoch_{epoch}.gif')
+        if viz_output_dir != None:
+            output_fp = os.path.join(viz_output_dir, f'epoch_{epoch}.gif')
         val_loss = validate(epoch, val_loader, criterion, device, model, visualize_frame, dataset, output_fp)
         print(f'Epoch {epoch}/{n_epochs}\tStep {step_cnt[0]}\tValidation Loss {val_loss:.4}')
         if use_wandb:
-            wandb.log({'val/loss': train_loss, 'epoch': epoch, 'step_cnt': step_cnt[0]})
+            wandb.log({'val/loss': val_loss, 'epoch': epoch, 'step_cnt': step_cnt[0]})
