@@ -66,7 +66,11 @@ def run(n_epochs, train_loader, val_loader, criterion, device, model, optimizer,
     for epoch in range(n_epochs):
         
         # Training
-        model.train()
+        if epoch <= n_epochs // 2:
+            model.train()
+        else:
+            model.eval()
+            
         if model_output_dir != None:
             output_fp = os.path.join(model_output_dir, f'epoch_{epoch}.pth')
         train_loss = train(n_epochs, epoch, step_cnt, train_loader, criterion, device, model, optimizer, weighted, output_fp)

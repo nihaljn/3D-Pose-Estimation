@@ -21,14 +21,15 @@ class Args:
     actions_train = 'Walk,Jog,Box'.split(',')
     subjects_val = 'Validate/S1,Validate/S2,Validate/S3'.split(',')
     actions_val = actions_train
-    n_epochs = 200
+    n_epochs = 150
     batch_size = 128
-    wandb = False
+    wandb = True
     visualize_frame = True
     viz_dir = 'data/visuals/'
     model_dir = 'data/saved_models/'
     seed = 982356147
     weighted = False
+    lr = 5e-4
     
     
 def main():
@@ -84,8 +85,8 @@ def main():
     
     criterion = weighted_mpjpe if args.weighted else mpjpe
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    model = FrameModel(n_joints=15, linear_size=1024).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=5e-4)
+    model = FrameModel(n_joints=15, linear_size=1024, dropout=0.5).to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     
     run(args.n_epochs, train_dataloader, val_dataloader, criterion, device, model, optimizer, 
         use_wandb=args.wandb, visualize_frame=args.visualize_frame, dataset=val_dataset, 

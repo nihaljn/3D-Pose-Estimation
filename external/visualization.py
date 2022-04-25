@@ -152,6 +152,6 @@ def render_animation(keypoints, keypoints_metadata, poses, skeleton, fps, bitrat
 
     # fig.tight_layout()
     
-    anim = FuncAnimation(fig, update_video, frames=np.arange(0, limit), interval=1000/fps, repeat=False)
+    anim = FuncAnimation(fig, update_video, frames=np.arange(0, limit), interval=500/fps, repeat=False)
     anim.save(output, dpi=80, writer='imagemagick')
     plt.close()

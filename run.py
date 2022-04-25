@@ -82,6 +82,10 @@ def train(n_epochs, epoch, step_cnt, dataloader, criterion, device, model, optim
         self_reconstruction_loss_val = sum(self_reconstruction_losses) / len(self_reconstruction_losses)
         
         loss = consistency_loss_val + reconstruction_loss_val + self_reconstruction_loss_val
+        if batch_cnt == len(dataloader) - 1:
+            print(f'Consistency loss: {consistency_loss_val.cpu().item()}',
+                  f'\tReconstruction Loss: {reconstruction_loss_val.cpu().item()}',
+                  f'\tSelf-reconstruction loss: {self_reconstruction_loss_val.cpu().item()}')
         
         optimizer.zero_grad()
         loss.backward()
@@ -103,7 +107,12 @@ def run(n_epochs, train_loader, val_loader, criterion, device, model, optimizer,
     for epoch in range(n_epochs):
         
         # Training
+        # if epoch <= n_epochs // 2:
+        #     model.train()
+        # else:
+        # model.eval()
         model.train()
+            
         if model_output_dir != None:
             output_fp = os.path.join(model_output_dir, f'epoch_{epoch}.pth')
         train_loss = train(n_epochs, epoch, step_cnt, train_loader, criterion, device, model, optimizer, output_fp)
