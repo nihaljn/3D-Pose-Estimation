@@ -12,6 +12,7 @@ from dataset import MultiViewDataset
 from utils import *
 from loss import *
 from external.visualization import visualize
+from run import train, validate
 
 
 class Args:
@@ -21,18 +22,36 @@ class Args:
     actions_train = 'Walk,Jog,Box'.split(',')
     subjects_val = 'Validate/S1,Validate/S2,Validate/S3'.split(',')
     actions_val = actions_train
-    n_epochs = 100
+    n_epochs = 200
     batch_size = 64
     wandb = True
     visualize_frame = True
     viz_dir = 'data/visuals/'
     model_dir = 'data/saved_models/'
-    checkpoint_fp = 'data/saved_models/peachy-planet-22/epoch_160.pth'
+    checkpoint_fp = 'data/saved_models/fancy-frog-40/epoch_149.pth'
     seed = 982356147
+    adapt_example = False
     
     
+def adapt(n_epochs, model_output_dir, dataloader, device, model, optimizer, use_wandb=False):
+    for epoch in range(n_epochs):
+        # Training
+        model.eval()
+        criterion = None
+        if model_output_dir != None:
+            output_fp = os.path.join(model_output_dir, f'epoch_{epoch}.pth')
+        step_cnt = [0]
+        train_loss = train(n_epochs, epoch, step_cnt, dataloader, criterion, device, model, optimizer, output_fp)
+        print(f'Epoch {epoch}/{n_epochs}\tStep {step_cnt[0]}\tTrain Loss {train_loss:.4}')
+        if use_wandb:
+            wandb.log({'train_loss': train_loss, 'epoch': epoch, 'step_cnt': step_cnt[0]})
+        val_loss = validate(epoch, dataloader, criterion, device, model, visualize_frame=False)
+        print(f'Epoch {epoch}/{n_epochs}\tStep {step_cnt[0]}\tValidation Loss {val_loss:.4}')
+        if use_wandb:
+            wandb.log({'val/loss': val_loss, 'epoch': epoch, 'step_cnt': step_cnt[0]})
     
-def adapt(n_epochs, pose_2d, pose_3d, cameras, device, model, optimizer, scheduler, 
+    
+def adapt_example(n_epochs, pose_2d, pose_3d, cameras, device, model, optimizer, scheduler, 
         use_wandb, visualize_frame, dataset, model_output_dir, viz_output_dir):
     
     cam0_2d, cam1_2d, cam2_2d = pose_2d[0].to(device), pose_2d[1].to(device), pose_2d[2].to(device)
@@ -153,10 +172,6 @@ def main():
     poses_train_3d, poses_train_2d, cameras_train = fetch_multiview(args.subjects_train, keypoints, he_dataset, args.actions_train)
     poses_val_3d, poses_val_2d, cameras_val = fetch_multiview(args.subjects_val, keypoints, he_dataset, args.actions_val)
     
-    val_dataset = MultiViewDataset(poses_val_2d, poses_val_3d, cameras_val, 
-                                 keypoints_metadata, he_dataset.skeleton(), he_dataset.fps())
-    val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=True, num_workers=2)
-    
     criterion = None
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model = torch.load(args.checkpoint_fp).to(device)
@@ -165,13 +180,23 @@ def main():
     # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.7)
     scheduler = None
     
-    # pick an example
-    for pose_2d, pose_3d, cameras in val_dataloader:
-        break
+    if args.adapt_example:
+        val_dataset = MultiViewDataset(poses_val_2d, poses_val_3d, cameras_val, 
+                                     keypoints_metadata, he_dataset.skeleton(), he_dataset.fps())
+        val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=True, num_workers=2)
+        # pick an example
+        for pose_2d, pose_3d, cameras in val_dataloader:
+            break
+        adapt_example(args.n_epochs, pose_2d, pose_3d, cameras, device, model, optimizer, scheduler=scheduler, 
+            use_wandb=args.wandb, visualize_frame=args.visualize_frame, 
+            dataset=val_dataset, model_output_dir=args.model_dir, viz_output_dir=args.viz_dir)
     
-    adapt(args.n_epochs, pose_2d, pose_3d, cameras, device, model, optimizer, scheduler=scheduler, 
-        use_wandb=args.wandb, visualize_frame=args.visualize_frame, 
-        dataset=val_dataset, model_output_dir=args.model_dir, viz_output_dir=args.viz_dir)
+    else:
+        val_dataset = MultiViewDataset(poses_val_2d, poses_val_3d, cameras_val, 
+                                     keypoints_metadata, he_dataset.skeleton(), he_dataset.fps())
+        val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=True, num_workers=2)
+        adapt(args.n_epochs, args.model_dir, val_dataloader, device, model, optimizer, use_wandb=args.wandb)
+    
     torch.save(model, os.path.join(args.model_dir, 'last_checkpoint.pth'))
     return
     

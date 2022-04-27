@@ -21,8 +21,8 @@ class Args:
     actions_train = 'Walk,Jog,Box'.split(',')
     subjects_val = 'Validate/S1,Validate/S2,Validate/S3'.split(',')
     actions_val = actions_train
-    viz_dir = 'data/visuals/presentation/sleek-vortex-42'
-    checkpoint_fp = 'data/saved_models/sleek-vortex-42/epoch_148.pth'
+    viz_dir = 'data/visuals/presentation/stoic-dust-33/train'
+    checkpoint_fp = 'data/saved_models/stoic-dust-33/epoch_148.pth'
     seed = 982356147
     num_samples = 5
     
@@ -63,6 +63,8 @@ def visualize_frames(num_samples, dataloader, device, model, dataset, viz_output
                       dataset.fps, output_fp=output_fp)
         
         cnt += 1
+        if cnt == num_samples:
+            return
     
     
 def main():
@@ -108,13 +110,18 @@ def main():
     val_dataset = MultiViewDataset(poses_val_2d, poses_val_3d, cameras_val, 
                                  keypoints_metadata, he_dataset.skeleton(), he_dataset.fps(), mode='sequence')
     val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=True, num_workers=2)
+    train_dataset = MultiViewDataset(poses_train_2d, poses_train_3d, cameras_train, 
+                                 keypoints_metadata, he_dataset.skeleton(), he_dataset.fps(), mode='sequence')
+    train_dataloader = DataLoader(train_dataset, batch_size=1, shuffle=True, num_workers=2)
     
     criterion = None
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model = torch.load(args.checkpoint_fp).to(device)
     model.eval()
     
-    visualize_frames(args.num_samples, val_dataloader, device, model, val_dataset, viz_output_dir=args.viz_dir)
+    # visualize_frames(args.num_samples, val_dataloader, device, model, val_dataset, viz_output_dir=args.viz_dir)
+    # visualize_frames(args.num_samples, train_dataloader, device, model, train_dataset, viz_output_dir=args.viz_dir)
+    print(len(train_dataloader))
     return
     
     
