@@ -1,7 +1,7 @@
 import torch
 
 from external.camera import *
-from utils import cam_info_to_idx
+from common.utils import cam_info_to_idx
 
 def mpjpe(predicted, target):
     """

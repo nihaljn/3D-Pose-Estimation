@@ -2,7 +2,8 @@ import os
 import torch
 from external.visualization import visualize
 import wandb
-from loss import mpjpe
+
+from common.loss import mpjpe
 
 def validate(epoch, dataloader, criterion, device, model, visualize_frame=False, dataset=None, output_fp=None):
     total_loss = 0
@@ -35,6 +36,7 @@ def validate(epoch, dataloader, criterion, device, model, visualize_frame=False,
     
     return total_loss / batch_cnt
 
+
 def train(n_epochs, epoch, step_cnt, dataloader, criterion, device, model, optimizer, weighted=False, output_fp=None):
     total_loss = 0
     batch_cnt = 0
@@ -58,7 +60,7 @@ def train(n_epochs, epoch, step_cnt, dataloader, criterion, device, model, optim
     return total_loss / batch_cnt
     
     
-def run(n_epochs, train_loader, val_loader, criterion, device, model, optimizer, use_wandb=False, 
+def run(n_epochs, train_loader, val_loader, criterion, device, model, optimizer, use_wandb=False, scheduler=None,
         visualize_frame=False, dataset=None, model_output_dir=None, viz_output_dir=None, weighted=False):
     '''Train + Val'''
     step_cnt = [0] # as list to pass by reference

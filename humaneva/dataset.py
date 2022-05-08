@@ -48,7 +48,10 @@ class MultiViewDataset(Dataset):
         self.mode = mode
         
     def __len__(self):
-        return self.poses_3d[0].shape[0]
+        if self.mode == 'frame':
+            return self.poses_3d[0].shape[0]
+        else:
+            return len(self.poses_3d)
     
     def __getitem__(self, index):
         if self.mode == 'frame':

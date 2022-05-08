@@ -4,21 +4,31 @@ import wandb
 
 from external.visualization import visualize
 from external.camera import camera_3d_to_camera_2d
-from utils import convert_cam_to_viz_dict
-from loss import *
+from humaneva.utils import convert_cam_to_viz_dict
+from common.loss import *
 
 
 def validate(epoch, dataloader, criterion, device, model, visualize_frame=False, dataset=None, output_fp=None):
     total_loss = 0
     batch_cnt = 0
     for pose_2d, pose_3d, cameras in dataloader:
-        cam0_2d, cam1_2d, cam2_2d = pose_2d[0].to(device), pose_2d[1].to(device), pose_2d[2].to(device)
-        with torch.no_grad():
-            cam0_3d_pred = model(cam0_2d)
-            cam1_3d_pred = model(cam1_2d)
-            cam2_3d_pred = model(cam2_2d)
-        cam0_3d_targ, cam1_3d_targ, cam2_3d_targ = pose_3d[0].to(device), pose_3d[1].to(device), pose_3d[2].to(device)
-        loss = mpjpe(cam0_3d_pred, cam0_3d_targ) + mpjpe(cam1_3d_pred, cam1_3d_targ) + mpjpe(cam2_3d_pred, cam2_3d_targ)
+        
+        assert pose_2d.shape[0] == 1, 'Batch size should be 1'
+        pose_2d, pose_3d, cameras = pose_2d.to(device), pose_3d.to(device), cameras.squeeze().to(device)
+        n_frames = cameras.shape[1]
+        
+        pose_3d_pred = [None, None, None]
+        # mask = torch.full((n_frames, n_frames), -torch.inf).to(device)
+        # attend_size = 5
+        # for i in range(n_frames):
+        #     mask[i, max(i - attend_size, 0):min(i + attend_size + 1, n_frames)] = 0
+        mask = None
+        loss = 0
+        for cam_idx in range(3):
+            with torch.no_grad():
+                pose_3d_pred[cam_idx] = model(pose_2d[:, cam_idx], src_mask=mask) # (n_frames x n_joints x 3)
+            loss += mpjpe(pose_3d_pred[cam_idx], pose_3d[0, cam_idx]) 
+        
         total_loss += (loss/3).cpu().item()
         batch_cnt += 1
     
@@ -26,10 +36,12 @@ def validate(epoch, dataloader, criterion, device, model, visualize_frame=False,
         assert dataset != None, 'Need dataset object to visualize'
         assert output_fp != None, 'Need path to visualization output file'
         idx = min(12, pose_2d[0].shape[0] - 1)
-        data_2d = pose_2d[0][idx].unsqueeze(0).numpy()
-        pred_3d = cam0_3d_pred[idx].unsqueeze(0).cpu().numpy()
-        targ_3d = pose_3d[0][idx].unsqueeze(0).numpy()
-        cam = convert_cam_to_viz_dict(cameras[0][idx], 0)
+        cam_idx = 1
+        # print(pose_2d.shape, pose_3d_pred[0].shape, cameras.shape)
+        data_2d = pose_2d[0, cam_idx][idx].unsqueeze(0).numpy()
+        pred_3d = pose_3d_pred[cam_idx][idx].unsqueeze(0).cpu().numpy()
+        targ_3d = pose_3d[0, cam_idx][idx].unsqueeze(0).numpy()
+        cam = convert_cam_to_viz_dict(cameras[cam_idx][idx], cam_idx)
         visualize(data_2d.copy(), targ_3d.copy(), pred_3d.copy(), 
                   dataset.keypoints_metadata, cam, dataset.skeleton, 
                   dataset.fps, output_fp=output_fp)
@@ -42,24 +54,27 @@ def train(n_epochs, epoch, step_cnt, dataloader, criterion, device, model, optim
     batch_cnt = 0
     for pose_2d, pose_3d, cameras in dataloader:
         
-        cam0_2d, cam1_2d, cam2_2d = pose_2d[0].to(device), pose_2d[1].to(device), pose_2d[2].to(device)
-        cameras[0], cameras[1], cameras[2] = cameras[0].to(device), cameras[1].to(device), cameras[2].to(device)
-        n_batch = cam0_2d.shape[0]
+        assert pose_2d.shape[0] == 1, 'Batch size should be 1'
+        pose_2d, pose_3d, cameras = pose_2d.to(device), pose_3d.to(device), cameras.squeeze().to(device)
+        n_frames = cameras.shape[1]
         
-        # concatenating to pass as a single batch instead of 3 separate forward passes
-        all_cam_2d = torch.cat((cam0_2d, cam1_2d, cam2_2d), dim=0)
-        all_cam_3d_pred = model(all_cam_2d)
-        # recovering per camera predictions
-        cam_3d_preds = [all_cam_3d_pred[:n_batch], all_cam_3d_pred[n_batch:2*n_batch], all_cam_3d_pred[2*n_batch:]]
-        cam_2d_preds = {(src, targ): [] for src in range(3) for targ in range(3)} 
+        pose_3d_pred = [None, None, None]
+        # mask = torch.full((n_frames, n_frames), -torch.inf).to(device)
+        # attend_size = 5
+        # for i in range(n_frames):
+        #     mask[i, max(i - attend_size, 0):min(i + attend_size + 1, n_frames)] = 0
+        mask = None
+        for cam_idx in range(3):
+            pose_3d_pred[cam_idx] = model(pose_2d[:, cam_idx], src_mask=mask) # (n_frames x n_joints x 3)
+        cam_2d_preds = {(src, targ): [] for src in range(3) for targ in range(3)}
         
         # project 3d to 2d in each camera space
-        for idx in range(n_batch):
+        for idx in range(n_frames):
             cams = [cameras[0][idx:idx+1], cameras[1][idx:idx+1], cameras[2][idx:idx+1]]
             for cam_idx_src in range(3):
                 for cam_idx_targ in range(3):
-                    cam_2d_pred = camera_3d_to_camera_2d(cam_idx_src, cam_3d_preds[cam_idx_src][idx:idx+1], 
-                                                          cam_idx_targ, cams[cam_idx_src], cams[cam_idx_targ], fix_offset=True)
+                    cam_2d_pred = camera_3d_to_camera_2d(cam_idx_src, pose_3d_pred[cam_idx_src][idx:idx+1], 
+                                                         cam_idx_targ, cams[cam_idx_src], cams[cam_idx_targ], fix_offset=True)
                     cam_2d_preds[(cam_idx_src, cam_idx_targ)].append(cam_2d_pred)
         cam_2d_preds = {k: torch.cat(v, dim=0) for k, v in cam_2d_preds.items()}
         
@@ -73,9 +88,9 @@ def train(n_epochs, epoch, step_cnt, dataloader, criterion, device, model, optim
         for cam_idx_src in range(3):
             for cam_idx_targ in range(3):
                 if cam_idx_src == cam_idx_targ:
-                    self_reconstruction_losses.append(mpjpe(cam_2d_preds[(cam_idx_src, cam_idx_targ)], pose_2d[cam_idx_targ]))
+                    self_reconstruction_losses.append(mpjpe(cam_2d_preds[(cam_idx_src, cam_idx_targ)], pose_2d[0, cam_idx_targ]))
                 else:
-                    reconstruction_losses.append(mpjpe(cam_2d_preds[(cam_idx_src, cam_idx_targ)], pose_2d[cam_idx_targ]))
+                    reconstruction_losses.append(mpjpe(cam_2d_preds[(cam_idx_src, cam_idx_targ)], pose_2d[0, cam_idx_targ]))
                     
         consistency_loss_val = sum(consistency_losses) / len(consistency_losses)
         reconstruction_loss_val = sum(reconstruction_losses) / len(reconstruction_losses)
@@ -107,11 +122,11 @@ def run(n_epochs, train_loader, val_loader, criterion, device, model, optimizer,
     for epoch in range(n_epochs):
         
         # Training
-        # if epoch <= n_epochs // 2:
-        #     model.train()
-        # else:
-        # model.eval()
-        model.train()
+        if epoch <= n_epochs // 2:
+            model.train()
+        else:
+            model.eval()
+        # model.train()
             
         if model_output_dir != None:
             output_fp = os.path.join(model_output_dir, f'epoch_{epoch}.pth')
@@ -119,7 +134,7 @@ def run(n_epochs, train_loader, val_loader, criterion, device, model, optimizer,
         print(f'Epoch {epoch}/{n_epochs}\tStep {step_cnt[0]}\tTrain Loss {train_loss:.4}')
         if use_wandb:
             wandb.log({'train/loss': train_loss, 'epoch': epoch, 'step_cnt': step_cnt[0]})
-            
+        
         # Validation
         model.eval()
         if viz_output_dir != None:
@@ -131,3 +146,4 @@ def run(n_epochs, train_loader, val_loader, criterion, device, model, optimizer,
         
         if scheduler != None:
             scheduler.step()
+            

@@ -7,10 +7,11 @@ import wandb
 
 from external.camera import *
 from external.humaneva_dataset import HumanEvaDataset
-from model import FrameModel
-from dataset import MultiViewDataset
-from utils import *
-from loss import *
+from common.model import FrameModel
+from humaneva.dataset import MultiViewDataset
+from humaneva.utils import *
+from common.utils import set_seed
+from common.loss import *
 from external.visualization import visualize
 
 
@@ -21,8 +22,8 @@ class Args:
     actions_train = 'Walk,Jog,Box'.split(',')
     subjects_val = 'Validate/S1,Validate/S2,Validate/S3'.split(',')
     actions_val = actions_train
-    viz_dir = 'data/visuals/presentation/stoic-dust-33/train'
-    checkpoint_fp = 'data/saved_models/stoic-dust-33/epoch_148.pth'
+    viz_dir = 'data/visuals/presentation/divine-donkey-50'
+    checkpoint_fp = 'data/saved_models/divine-donkey-50/epoch_149.pth'
     seed = 982356147
     num_samples = 5
     
@@ -119,9 +120,9 @@ def main():
     model = torch.load(args.checkpoint_fp).to(device)
     model.eval()
     
-    # visualize_frames(args.num_samples, val_dataloader, device, model, val_dataset, viz_output_dir=args.viz_dir)
+    visualize_frames(args.num_samples, val_dataloader, device, model, val_dataset, viz_output_dir=args.viz_dir)
     # visualize_frames(args.num_samples, train_dataloader, device, model, train_dataset, viz_output_dir=args.viz_dir)
-    print(len(train_dataloader))
+    # print(len(train_dataloader))
     return
     
     

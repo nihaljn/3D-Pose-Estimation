@@ -7,12 +7,13 @@ import wandb
 
 from external.camera import *
 from external.humaneva_dataset import HumanEvaDataset
-from model import FrameModel
+from common.model import FrameModel
 from dataset import MultiViewDataset
-from utils import *
-from loss import *
+from common.utils import set_seed
+from humaneva.utils import *
+from common.loss import *
 from external.visualization import visualize
-from run import train, validate
+from humaneva.train_frame import train, validate
 
 
 class Args:
