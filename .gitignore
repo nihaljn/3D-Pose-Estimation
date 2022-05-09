@@ -6,6 +6,7 @@ wandb/
 **/__pycache__/
 **/archive/
 data/
+human36m_scratch.ipynb
 scratch.ipynb
 scratch_eval.ipynb
 please_work*.ipynb
