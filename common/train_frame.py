@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 from external.visualization import visualize
 from external.camera import camera_3d_to_camera_2d
-from common.utils import convert_cam_to_viz_dict
+from human36m.utils import convert_cam_to_viz_dict
 from common.loss import *
 
 
