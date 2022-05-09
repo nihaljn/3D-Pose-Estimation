@@ -46,7 +46,9 @@ We make the following modeling assumptions in our approach:
 
 #### *Model*
 
-<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/model_diagram.png?token=GHSAT0AAAAAABQ3ZLRNTQYZSMXUAWO4OH46YTZNP3Q"></img>
+<center>
+<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/model_diagram.png?token=GHSAT0AAAAAABQ3ZLRNTQYZSMXUAWO4OH46YTZNP3Q">
+</center>
 <em><strong>Figure []. Model Architecture.</strong> This diagram shows our simple model architecture taken from []. We take 2D poses with respect to a camera as input and estimate 3D poses as output with respect to the same camera.</em>
 
 Figure [] shows our model with its basic building blocks. The model design is such that it takes 2D poses as inputs and produces 3D poses as outputs. This approach, adapted from [], is based on a simple fully-connected neural network with batch normalization, dropout, Rectified Linear Units (RELUs), and residual connections []. There are two further layers: one to increase dimensionality to 512 just before the input to the model in the diagram, and one that projects the output of the model to get 3D poses. In our experiments we use 2 residual blocks, so we have a total of 4 linear layers.
@@ -58,8 +60,18 @@ Having obtained estimates of 3D poses using this model, we can measure the quali
 where, <img src="https://render.githubusercontent.com/render/math?math={N, J}"> are the number of examples and joints respectively, and <img src="https://render.githubusercontent.com/render/math?math={\hat{y}, y}"> are the estimated pose and ground truth pose respectively. Note that the same formulation holds for poses in 3D or 2D.
 
 We train this model using two approaches:
-<strong>1. Baseline.</strong> 
-<strong>2. Without labels (ours).</strong>
+
+<strong>1. Baseline.</strong> We follow the same approach as in [], assuming access to 3D labels while training. This approach trains the model to minimize the MPJPE between the predicted 3D poses and the ground truth 3D poses.
+
+<strong>2. Without labels (ours).</strong> We would like to train this model without using any 3D supervision. Our proposed method relies on access to multiview 2D poses of the same scene. Thus, treating multiview 2D poses as input, we obtain multiview 3D pose estimates using our model. We train our model to ensure that these multiview 3D poses are consistent with respect to each other. Formally, we assume access to 2D poses with respect to 3 cameras <img src="https://render.githubusercontent.com/render/math?math={\mathcal{C}_i\ \ (i \in \{1, 2, 3\})}">, denoted as <img src="https://render.githubusercontent.com/render/math?math={x_i}">. Let the estimatated 3D pose with respect to <img src="https://render.githubusercontent.com/render/math?math={\mathcal{C}_i}"> be <img src="https://render.githubusercontent.com/render/math?math={\hat{y}_i = f(x_i)}"> where <img src="https://render.githubusercontent.com/render/math?math={f}"> is our model. Since we have access to the pose in 3D, we can rotate the pose and obtain the 2D pose with respect to some other camera. Let <img src="https://render.githubusercontent.com/render/math?math={\hat{x}_{i, j}}"> denote the estimated 2D pose with respect to <img src="https://render.githubusercontent.com/render/math?math={\mathcal{C}_j}"> obtained by rotating and projecting <img src="https://render.githubusercontent.com/render/math?math={\hat{y}_i}">. This procedure is shown visually in figure [].
+
+<center>
+<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/model_algo.png?token=GHSAT0AAAAAABQ3ZLRNSDOWNO6JCYYNMGXAYTZO24Q" height=200>
+</center>
+
+<em><strong>Figure []. Model training procedure.</strong></em> We obtain estimates of 3D poses with respect to a particular camera, and rotate and project the 3D pose to obtain 2D poses with respect to different views. Our model is trained to ensure consistency across the different views.
+
+
 
 ### Why does it make sense? How does it relate to prior work?
 
