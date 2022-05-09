@@ -2,7 +2,7 @@
 
 |Nihal Jain|Talha Faiz|Titas Chakraborty|
 |:---:|:---:|:---:|
-|nihalj@andrew.cmu.edu|||
+|nihalj@andrew.cmu.edu|mfaiz@andrew.cmu.edu||
 
 <!-- 
 Motivation: Why is it important and relevant? Why should we care?
@@ -28,6 +28,18 @@ However, most methods perform monocular reconstruction. They assume that only on
 
 ## Related Work
 
+<!-- still working on it on an offline document. Will refresh changes with citations closer to midnight but feel free to make changes - Talha) -->
+
+The goal of multi-view multi-person 3D pose estimation is to localize 3D skeleton joints for each person’s instance in a scene from multiple camera inputs. This is a fundamental task that has significance in many real-world applications (such as surveillance, sportcast, gaming and mixed reality) and is mainly tackled by reconstruction-based and volumetric approaches in previous literature. The former first estimates 2D poses in each view independently and then aggregates them and reconstructs their 3D counterparts via triangulation or a 3D pictorial structure model. The volumetric approach builds a 3D feature volume through heatmap estimation and 2D-to-3D un-projection at first, based on which instance localization and 3D pose estimation are performed for each person instance individually. Though with notable accuracy, the above paradigms are inefficient due to highly relying on those intermediate tasks. Moreover, they estimate 3D pose for each person separately, making the computation cost grow linearly with the number of persons. 
+
+Algorithms for 3D human pose estimation from single images have now matured to the point where they can operate in real-time and in the wild. They typically rely on sophisticated deep-net architectures that have been trained using very large datasets. However, dealing with motions for which no such database exists remains an open problem. In this section, we discuss the recent techniques that tackle this aspect. 
+
+Image Annotations: An obvious approach is to create the required datasets, which is by no means easy and has become a research topic in itself. In a controlled studio environment, marker-suits and marker-less motion capture systems can be used to estimate the pose automatically. While effective for a subset of human activities, these methods do not generalize well to in-field scenarios in which videos must be annotated manually or using semi-automated tools. However, even with such tools, the annotation process remains costly, labor-intensive and error-prone at large scales. 
+
+Data Augmentations: An attractive alternative is to augment a small, labeled dataset with synthetically generated images. This was done by replacing the studio background and human appearance of existing datasets with more natural textures, and in by generating diverse images via image mosaicing. Several authors have proposed to leverage recent advances in computer graphics and human rendering to rely on fully synthetic images. However, the limited diversity of appearance and motion that such simulation tools can provide, along with their not yet perfect realism, limits both the generality and the accuracy of networks trained using only synthetic images. 
+
+Weak supervision: In this paper, this is the approach we focus on by introducing a weakly-supervised multi-view training method. It is related in spirit but different in both task and methodology to the method on geometric supervision of monocular depth estimation from stereo views of Garg et al., the multi-view visual hull constraint used for reconstruction of static objects by Yan et al., and the differentiable ray-potential view-consistency used by Tulsiani et al. Weak supervision has been explored for pose estimation purposes in which involves complementing fully-annotated data with 2D pose annotations. Furthermore, Simon et al.iteratively improve a 2D pose detector through view consistency in a massive multiview studio, using RANSAC and manual intervention to remove outliers. While effective for imposing reprojection constraints during training, these methods still require extensive manual 2D annotation in the images featuring the target motions and knowledge of the external camera matrix. By contrast, the only manual intervention our approach requires is to supply the camera intrinsic parameters, which are either provided by the manufacturer or can be estimated using standard tools. 
+
 
 ## Idea
 
@@ -45,11 +57,13 @@ We make the following modeling assumptions in our approach:
 - <strong>Test-time Data</strong>: We assume access to single views of the same frame during testing and no camera parameters. Further, we show in our experiments, that if indeed we have access to multiple views and camera parameters at test time, we can achieve enhanced performance on the test data.
 
 #### *Model*
-
+<p>
 <center>
 <img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/model_diagram.png?token=GHSAT0AAAAAABQ3ZLRNTQYZSMXUAWO4OH46YTZNP3Q">
 </center>
+    
 <em><strong>Figure []. Model Architecture.</strong> This diagram shows our simple model architecture taken from []. We take 2D poses with respect to a camera as input and estimate 3D poses as output with respect to the same camera.</em>
+</p>
 
 Figure [] shows our model with its basic building blocks. The model design is such that it takes 2D poses as inputs and produces 3D poses as outputs. This approach, adapted from [], is based on a simple fully-connected neural network with batch normalization, dropout, Rectified Linear Units (RELUs), and residual connections []. There are two further layers: one to increase dimensionality to 512 just before the input to the model in the diagram, and one that projects the output of the model to get 3D poses. In our experiments we use 2 residual blocks, so we have a total of 4 linear layers.
 
@@ -65,26 +79,120 @@ We train this model using two approaches:
 
 <strong>2. Without labels (ours).</strong> We would like to train this model without using any 3D supervision. Our proposed method relies on access to multiview 2D poses of the same scene. Thus, treating multiview 2D poses as input, we obtain multiview 3D pose estimates using our model. We train our model to ensure that these multiview 3D poses are consistent with respect to each other. Formally, we assume access to 2D poses with respect to 3 cameras <img src="https://render.githubusercontent.com/render/math?math={\mathcal{C}_i\ \ (i \in \{1, 2, 3\})}">, denoted as <img src="https://render.githubusercontent.com/render/math?math={x_i}">. Let the estimatated 3D pose with respect to <img src="https://render.githubusercontent.com/render/math?math={\mathcal{C}_i}"> be <img src="https://render.githubusercontent.com/render/math?math={\hat{y}_i = f(x_i)}"> where <img src="https://render.githubusercontent.com/render/math?math={f}"> is our model. Since we have access to the pose in 3D, we can rotate the pose and obtain the 2D pose with respect to some other camera. Let <img src="https://render.githubusercontent.com/render/math?math={\hat{x}_{i, j}}"> denote the estimated 2D pose with respect to <img src="https://render.githubusercontent.com/render/math?math={\mathcal{C}_j}"> obtained by rotating and projecting <img src="https://render.githubusercontent.com/render/math?math={\hat{y}_i}">. This procedure is shown visually in figure [].
 
+<p>
 <center>
 <img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/model_algo.png?token=GHSAT0AAAAAABQ3ZLRNSDOWNO6JCYYNMGXAYTZO24Q" height=200>
 </center>
 
-<em><strong>Figure []. Model training procedure.</strong></em> We obtain estimates of 3D poses with respect to a particular camera, and rotate and project the 3D pose to obtain 2D poses with respect to different views. Our model is trained to ensure consistency across the different views.
+<em><strong>Figure []. Model training procedure.</strong> We obtain estimates of 3D poses with respect to a particular camera, and rotate and project the 3D pose to obtain 2D poses with respect to different views. Our model is trained to ensure consistency across the different views.</em>
+</p>
+
+#### *Loss*
+
+Here we discuss the loss function used to train the model using our approach shown above.
+
+Having obtained 2D pose estimates with respect to different views (a total of 9 2D pose estimates for 3 cameras), we train our model using the following loss:
+
+<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/loss.png?token=GHSAT0AAAAAABQ3ZLRMJCGB77QB7BFVR7AQYTZPLHA" height=100>
+
+Here, the first reconstruction term ensures that the estimated 2D poses after rotation and project match the ground truth 2D poses with respect to the target view. The second consistency terms enforces the model to learn 3D poses that are consistent with respect to the rotation and projection operations. We use differentiable versions of rotation and projection functions [] such that we can compute gradients of this loss function with repect to model weights and perform gradient descent.
+
+Note that this training method does not use ground truth 3D labels and only uses annotated 2D poses of the same frame with respect to different views.
 
 
+#### *Test Time Adaptation*
+
+***TODO***
 
 ### Why does it make sense? How does it relate to prior work?
 
+Our approach is based on the simple idea that multiple 2D views can be obtained from a single 3D view. We assume that if the model can learn to predict consistent multiview 3D poses of the same scene independently, then it will have learned to lift 2D poses to 3D in general. 
+
+While 3D pose estimation is often done using 3D supervision, our method which relies on the above idea does not require 3D supervision. 
+
+***TODO***
 
 ## Experiments
 
+In this section, we go over some of the implementation and data details of our project to ensure reproducibility.
+
 ### Data
+
+We run our experiments on two popular benchmark datasets for 3D pose estimation:
+
+<strong>1. HumanEva-I []</strong>. This is a small publicly available dataset that is very popular for human 3D pose estimation. It has been largely used for benchmarking the 3D pose estimation task over the last couple decades. We use the subjects `[Train/S1, Train/S2, Train/S3]` for training and `[Validate/S1, Validate/S2, Validate/S3]` for testing. Further, we restrict our experiments to the actions of `[Walk, Jog, Box]` on this data. This dataset has mocap data from 3 cameras and we use all 3 in our experiments.
+
+<strong>2. Human3.6M []</strong>. This is a large publicly available dataset for human 3D pose estimation. It contains 3.6 million images featuring 7  actors performing 15 ordinary actions such as walking, eating, sitting, and so on. Further, 2D joint locations and 3D ground truth positions are available, as well as projection (camera) parameters and body proportions for all the actors. We follow [] in that, we use subjects `[S1, S5, S6, S7, S8]` for training and `[S9, S11]` for testing. However, due to the scale of the data we restrict our experiments only to the actions of `[Walking, Greeting, Smoking, Sitting]` for both training and testing. As a result of this, we train our models on less than 1/5 the size of data used by others. This dataset has mocap data from 4 cameras and we use 3 in our experiments (`[cam_0, cam_1, cam_2]`).
+
+All the pose coordinate estimates for each dataset are taken to be in meters. However, we report the results in the following sections in millimeters as is the trend [].
 
 ### Model Training
 
+Our model takes inputs of shape `(N, J, 2)` and produces outputs of shape `(N, J, 3)` where `N` is the batch-size and `J` is `15` for HumanEva-I and `17` for Human3.6M. As described above, the model has 2 residual blocks and 2 other linear layers for pre- and post- processing.
+
+Since the pretrained models for the basline was unavailable we trained the model using the baseline approach that uses 3D labels as well. For HumanEva-I we train the baseline and our model for 150 epochs. For Human3.6M we train the baseline model for 100 epochs and due to time constraints, our model for 25 epochs. We used the Adam optimizer with a learning rate of `3e-4` across all our experiments.
+
+The baseline model is trained to minimize the MPJPE while our model is trained to minimize the proposed loss function above. However, across all experiments we track our model training by measuring the MPJPE as the validation metric on the validation set.
+
+During our experiments, we observed that training with Dropout activated to `0.5` for `T/2` number of epochs gives much better performance than both training with and without dropout for `T` epochs. We show the validation loss of these variants while training our model on the HumanEva-I dataset in figure [].
+
+<p>
+<center>
+<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/val_loss_dropout.png?token=GHSAT0AAAAAABQ3ZLRMWZEKVOOSBAQBWEQOYTZRF4Q">
+</center>
+    
+<em><strong>Figure []. Validation Loss v/s Epoch for different training strategies with dropout.</strong> Training with dropout activated for half the number of epochs gives much better performance than other strategies. The purple curve traces a sharp drop after dropout was deactivated after epoch 75. Note purple and green curve overlap till epoch 75.</em>
+</p>
 
 ## Results
 
+### Quantitative Results
+
+<p>
+<center>
+    
+|Method|HumanEva-I (mm)|Human3.6M (mm)|
+|:----|:----:|:----:|
+|Baseline (with 3D labels) [] |24.48|49.12 [100 epochs]|
+|Ours (without labels) <br> Dropout = 0.0|65.22|-|
+|Ours (without labels) <br> Dropout = 0.5|80.07|-|
+|Ours (without labels) <br> Dropout = 0.5 -> 0.0|39.67|67.32 [20 epochs]|
+|Ours + Test Time Adaptation|**7.55** [200 epochs]||
+
+</center>
+    
+<em><strong>Table 1. Quantitative results.</strong> Each cell shows the MPJPE metric (protocol #1) measured in millimeters. Unless otherwise indicated, each setup was trained for 150 epochs. We skipped some experiments on Human3.6M and trained inconsistently due to compute and time constraints. </em>
+</p>
+
+
+Table 1 shows the quantitative results obtained for our experiments on the two different datasets. We make the following observations:
+
+1. As stated in the previous section, the setup where we deactivate dropout after training for `T/2` number of epochs seems to be performing much better than the other variants. We believe this is because training with dropout helps the model achieve a good local minima via regularization, reaching which we should allow the optimization to exploit the minima by deactivating dropout henceforth.
+2. Our method performs slightly worse than the baseline approach. However, we believe that we perform well because (a) the baseline model has access to 3D labels while training whereas we assume no access to 3D supervision anywhere, and (b) while at train time our model assumes access to multi-view information, at test time our model is also a single-view model like the baseline making it a fair comparison.
+3. If we assume access to multiple views and camera information at test time, training the model on the test data helps in achieving significantly enhanced performance on the test data. While this is expected because we are training on the test data, we note this is possible because our method does not require labels. A caveat to this is that, this cannot be extended to a setup where real-time 3D pose estimation is necessary because training the model on the test data cannot happen on the fly.
+4. We were unable to perform rigourous experiments on Human3.6M dataset because (1) it was hard to obtain in time due to unresponsiveness of the dataset authors and (2) the dataset is much bigger than HumanEva-I making it computationally challenging for us to run experiments.
+
+
+### Qualitative Results
+
+In this section we present and analyze some qualitative results on each dataset.
+
+#### **HumanEva-I**
+
+|Input|Baseline|Ours|Ours + TTA|Ground Truth|
+|---|---|---|---|---|
+|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex0/input.gif?token=GHSAT0AAAAAABQ3ZLRNCHVZQE2ATD4QFUDQYTZT36Q">|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex0/baseline.gif?token=GHSAT0AAAAAABQ3ZLRMUACBKIEQ2VEBSQHWYTZTZVA" width=150>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex0/ours.gif?token=GHSAT0AAAAAABQ3ZLRMKTTMR7K3TKHAQWHAYTZT2SA" width=160>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex0/tta.gif?token=GHSAT0AAAAAABQ3ZLRMVMGG46MJHWTY2MI4YTZUQGQ" width=170>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex0/gt.gif?token=GHSAT0AAAAAABQ3ZLRNOHMPQ34HCKXWCQPMYTZT3JA" width=130>|
+|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex1/input.gif?token=GHSAT0AAAAAABQ3ZLRMC2THCSV6TP7ZDUKQYTZT6ZA">|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex1/baseline.gif?token=GHSAT0AAAAAABQ3ZLRMPN7UKZULLNFZLT4QYTZT6IQ" width=150>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex1/ours.gif?token=GHSAT0AAAAAABQ3ZLRNRZKLDUUOKLRV5ZMYYTZT7FA" width=170>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex1/tta.gif?token=GHSAT0AAAAAABQ3ZLRMA6QXGV6OUBVLCXR2YTZURRA" width=170>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex1/gt.gif?token=GHSAT0AAAAAABQ3ZLRMZSZG7YU34RRWU2GCYTZT6RQ" width=150>|
+
+While numerically these results differ a lot, qualitatively these results look satisfactory with very little difference between estimates and ground truths.
+
+#### **Human3.6M**
+
+
+|Input|Baseline|Ours|Ours + TTA|Ground Truth|
+|---|---|---|---|---|
+|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex0/input.gif?token=GHSAT0AAAAAABQ3ZLRNCHVZQE2ATD4QFUDQYTZT36Q">|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex0/baseline.gif?token=GHSAT0AAAAAABQ3ZLRMUACBKIEQ2VEBSQHWYTZTZVA" width=150>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex0/ours.gif?token=GHSAT0AAAAAABQ3ZLRMKTTMR7K3TKHAQWHAYTZT2SA" width=160>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex0/tta.gif?token=GHSAT0AAAAAABQ3ZLRMVMGG46MJHWTY2MI4YTZUQGQ" width=170>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex0/gt.gif?token=GHSAT0AAAAAABQ3ZLRNOHMPQ34HCKXWCQPMYTZT3JA" width=130>|
+|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex1/input.gif?token=GHSAT0AAAAAABQ3ZLRMC2THCSV6TP7ZDUKQYTZT6ZA">|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex1/baseline.gif?token=GHSAT0AAAAAABQ3ZLRMPN7UKZULLNFZLT4QYTZT6IQ" width=150>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex1/ours.gif?token=GHSAT0AAAAAABQ3ZLRNRZKLDUUOKLRV5ZMYYTZT7FA" width=170>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex1/tta.gif?token=GHSAT0AAAAAABQ3ZLRMA6QXGV6OUBVLCXR2YTZURRA" width=170>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex1/gt.gif?token=GHSAT0AAAAAABQ3ZLRMZSZG7YU34RRWU2GCYTZT6RQ" width=150>|
 
 ## Conclusion and Future Directions
 
