@@ -59,7 +59,7 @@ We make the following modeling assumptions in our approach:
 #### *Model*
 <p>
 <center>
-<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/model_diagram.png?token=GHSAT0AAAAAABQ3ZLRNTQYZSMXUAWO4OH46YTZNP3Q">
+<img src="files/model_diagram.png">
 </center>
     
 <em><strong>Figure []. Model Architecture.</strong> This diagram shows our simple model architecture taken from []. We take 2D poses with respect to a camera as input and estimate 3D poses as output with respect to the same camera.</em>
@@ -81,7 +81,7 @@ We train this model using two approaches:
 
 <p>
 <center>
-<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/model_algo.png?token=GHSAT0AAAAAABQ3ZLRNSDOWNO6JCYYNMGXAYTZO24Q" height=200>
+<img src="files/model_algo.png"> height=200>
 </center>
 
 <em><strong>Figure []. Model training procedure.</strong> We obtain estimates of 3D poses with respect to a particular camera, and rotate and project the 3D pose to obtain 2D poses with respect to different views. Our model is trained to ensure consistency across the different views.</em>
@@ -93,7 +93,7 @@ Here we discuss the loss function used to train the model using our approach sho
 
 Having obtained 2D pose estimates with respect to different views (a total of 9 2D pose estimates for 3 cameras), we train our model using the following loss:
 
-<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/loss.png?token=GHSAT0AAAAAABQ3ZLRMJCGB77QB7BFVR7AQYTZPLHA" height=100>
+<img src="files/loss.png"> height=100>
 
 Here, the first reconstruction term ensures that the estimated 2D poses after rotation and project match the ground truth 2D poses with respect to the target view. The second consistency terms enforces the model to learn 3D poses that are consistent with respect to the rotation and projection operations. We use differentiable versions of rotation and projection functions [] such that we can compute gradients of this loss function with repect to model weights and perform gradient descent.
 
@@ -138,7 +138,7 @@ During our experiments, we observed that training with Dropout activated to `0.5
 
 <p>
 <center>
-<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/val_loss_dropout.png?token=GHSAT0AAAAAABQ3ZLRMWZEKVOOSBAQBWEQOYTZRF4Q">
+<img src="files/val_loss_dropout.png">
 </center>
     
 <em><strong>Figure []. Validation Loss v/s Epoch for different training strategies with dropout.</strong> Training with dropout activated for half the number of epochs gives much better performance than other strategies. The purple curve traces a sharp drop after dropout was deactivated after epoch 75. Note purple and green curve overlap till epoch 75.</em>
@@ -181,8 +181,8 @@ In this section we present and analyze some qualitative results on each dataset.
 
 |Input|Baseline|Ours|Ours + TTA|Ground Truth|
 |---|---|---|---|---|
-|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex0/input.gif?token=GHSAT0AAAAAABQ3ZLRNCHVZQE2ATD4QFUDQYTZT36Q">|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex0/baseline.gif?token=GHSAT0AAAAAABQ3ZLRMUACBKIEQ2VEBSQHWYTZTZVA" width=150>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex0/ours.gif?token=GHSAT0AAAAAABQ3ZLRMKTTMR7K3TKHAQWHAYTZT2SA" width=160>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex0/tta.gif?token=GHSAT0AAAAAABQ3ZLRMVMGG46MJHWTY2MI4YTZUQGQ" width=170>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex0/gt.gif?token=GHSAT0AAAAAABQ3ZLRNOHMPQ34HCKXWCQPMYTZT3JA" width=130>|
-|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex1/input.gif?token=GHSAT0AAAAAABQ3ZLRMC2THCSV6TP7ZDUKQYTZT6ZA">|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex1/baseline.gif?token=GHSAT0AAAAAABQ3ZLRMPN7UKZULLNFZLT4QYTZT6IQ" width=150>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex1/ours.gif?token=GHSAT0AAAAAABQ3ZLRNRZKLDUUOKLRV5ZMYYTZT7FA" width=170>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex1/tta.gif?token=GHSAT0AAAAAABQ3ZLRMA6QXGV6OUBVLCXR2YTZURRA" width=170>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex1/gt.gif?token=GHSAT0AAAAAABQ3ZLRMZSZG7YU34RRWU2GCYTZT6RQ" width=150>|
+|<img src="files/he_ex0/input.gif">|<img src="files/he_ex0/baseline.gif" width=150>|<img src="files/he_ex0/ours.gif" width=160>|<img src="files/he_ex0/tta.gif" width=170>|<img src="files/he_ex0/gt.gif" width=130>|
+|<img src="files/he_ex1/input.gif">|<img src="files/he_ex1/baseline.gif" width=150>|<img src="files/he_ex1/ours.gif" width=170>|<img src="files/he_ex1/tta.gif" width=170>|<img src="files/he_ex1/gt.gif" width=150>|
 
 While numerically these results differ a lot, qualitatively these results look satisfactory with very little difference between estimates and ground truths.
 
@@ -191,8 +191,8 @@ While numerically these results differ a lot, qualitatively these results look s
 
 |Input|Baseline|Ours|Ours + TTA|Ground Truth|
 |---|---|---|---|---|
-|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex0/input.gif?token=GHSAT0AAAAAABQ3ZLRNCHVZQE2ATD4QFUDQYTZT36Q">|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex0/baseline.gif?token=GHSAT0AAAAAABQ3ZLRMUACBKIEQ2VEBSQHWYTZTZVA" width=150>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex0/ours.gif?token=GHSAT0AAAAAABQ3ZLRMKTTMR7K3TKHAQWHAYTZT2SA" width=160>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex0/tta.gif?token=GHSAT0AAAAAABQ3ZLRMVMGG46MJHWTY2MI4YTZUQGQ" width=170>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex0/gt.gif?token=GHSAT0AAAAAABQ3ZLRNOHMPQ34HCKXWCQPMYTZT3JA" width=130>|
-|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex1/input.gif?token=GHSAT0AAAAAABQ3ZLRMC2THCSV6TP7ZDUKQYTZT6ZA">|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex1/baseline.gif?token=GHSAT0AAAAAABQ3ZLRMPN7UKZULLNFZLT4QYTZT6IQ" width=150>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex1/ours.gif?token=GHSAT0AAAAAABQ3ZLRNRZKLDUUOKLRV5ZMYYTZT7FA" width=170>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex1/tta.gif?token=GHSAT0AAAAAABQ3ZLRMA6QXGV6OUBVLCXR2YTZURRA" width=170>|<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/he_ex1/gt.gif?token=GHSAT0AAAAAABQ3ZLRMZSZG7YU34RRWU2GCYTZT6RQ" width=150>|
+|<img src="files/he_ex0/input.gif">|<img src="files/he_ex0/baseline.gif" width=150>|<img src="files/he_ex0/ours.gif" width=160>|<img src="files/he_ex0/tta.gif" width=170>|<img src="files/he_ex0/gt.gif" width=130>|
+|<img src="files/he_ex1/input.gif">|<img src="files/he_ex1/baseline.gif" width=150>|<img src="files/he_ex1/ours.gif" width=170>|<img src="files/he_ex1/tta.gif" width=170>|<img src="files/he_ex1/gt.gif" width=150>|
 
 ## Conclusion and Future Directions
 
