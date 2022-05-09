@@ -27,17 +27,17 @@ However, most methods perform monocular reconstruction. They assume that only on
 
 ## Idea
 
-#### What is the idea?
+### What is the idea?
 
 
-#### Why does it make sense? How does it relate to prior work?
+### Why does it make sense? How does it relate to prior work?
 
 
 ## Experiments
 
-#### Data
+### Data
 
-#### Model Training
+### Model Training
 
 
 ## Results
