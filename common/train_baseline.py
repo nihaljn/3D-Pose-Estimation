@@ -1,5 +1,6 @@
 import os
 import torch
+from tqdm import tqdm
 from external.visualization import visualize
 import wandb
 
@@ -40,7 +41,7 @@ def validate(epoch, dataloader, criterion, device, model, visualize_frame=False,
 def train(n_epochs, epoch, step_cnt, dataloader, criterion, device, model, optimizer, weighted=False, output_fp=None):
     total_loss = 0
     batch_cnt = 0
-    for batch in dataloader:
+    for batch in tqdm(dataloader):
         model_inp = batch[0].to(device)
         target = batch[1].to(device)
         preds = model(model_inp)
@@ -56,6 +57,7 @@ def train(n_epochs, epoch, step_cnt, dataloader, criterion, device, model, optim
         step_cnt[0] += 1
         total_loss += loss.cpu().item()
         batch_cnt += 1
+        
     torch.save(model, output_fp)
     return total_loss / batch_cnt
     

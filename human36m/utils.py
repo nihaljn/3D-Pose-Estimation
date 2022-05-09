@@ -2,8 +2,8 @@ import numpy as np
 import torch
 import random
 
-from external.humaneva_dataset import humaneva_cameras_intrinsic_params as intrinsic_camera_params
-from external.humaneva_dataset import humaneva_cameras_extrinsic_params as extrinsic_camera_params
+from external.human36m_dataset import h36m_cameras_intrinsic_params as intrinsic_camera_params
+from external.human36m_dataset import h36m_cameras_extrinsic_params as extrinsic_camera_params
 
 
 def fetch(subjects, keypoints, dataset, action_filter):
@@ -22,14 +22,14 @@ def fetch(subjects, keypoints, dataset, action_filter):
                 if not found:
                     continue
             poses_2d = keypoints[subject][action]
-            for i in range(len(poses_2d)): # Iterate across cameras
-                out_poses_2d.append(poses_2d[i])
-            if 'positions_3d' in dataset[subject][action]:
-                poses_3d = dataset[subject][action]['positions_3d']
-                assert len(poses_3d) == len(poses_2d), 'Camera count mismatch'
-                for i in range(len(poses_3d)): # Iterate across cameras
-                    out_poses_3d.append(poses_3d[i])
-                    out_cameras.append(dataset[subject][action]['cameras'][i])
+            for cam_idx_str in poses_2d: # Iterate across cameras
+                out_poses_2d.append(poses_2d[cam_idx_str])
+                
+            poses_3d = dataset[subject][action]
+            assert len(poses_3d) == len(poses_2d), 'Camera count mismatch'
+            for i, cam_idx_str in enumerate(poses_3d): # Iterate across cameras
+                out_poses_3d.append(poses_3d[cam_idx_str])
+                out_cameras.append(dataset.cameras()[subject][i])
     return out_poses_3d, out_poses_2d, out_cameras
 
 
@@ -68,7 +68,7 @@ def fetch_multiview(subjects, keypoints, dataset, action_filter):
                                       [in_cam['res_w']],
                                       [in_cam['res_h']],
                                        ex_cam['orientation'],
-                                       np.asarray(ex_cam['translation'])/1000))
+                                       np.asarray(ex_cam['translation']/1000)))
                     c = np.tile(c, (poses_3d[cam_idx].shape[0], 1))
                     camera_params.append(c)
                 out_cameras.append(camera_params)
