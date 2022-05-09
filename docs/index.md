@@ -1,5 +1,9 @@
 # 3D Pose Estimation Using 2D Supervision
 
+|Nihal Jain|Talha Faiz|Titas Chakraborty|
+|:---:|:---:|:---:|
+|nihalj@andrew.cmu.edu|||
+
 <!-- 
 Motivation: Why is it important and relevant? Why should we care?
 Prior Work: Briefly mention related works that are relevant to your idea instead of covering all related works.
@@ -27,7 +31,20 @@ However, most methods perform monocular reconstruction. They assume that only on
 
 ## Idea
 
+In this section, we go over the details of our method and how it relates to prior work in this area.
+
 ### What is the idea?
+
+Our approach is based on the simple idea that multiple 2D views can be obtained from a single 3D view. Concretely, if we estimate some 3D pose of a frame, we should be able to rotate and project that 3D pose onto different views and obtain consistent 2D poses. Our model is trained using a loss function that captures this intuition. We next describe the details of our method in detail.
+
+#### *Assumptions*
+
+We make the following modeling assumptions in our approach:
+- <strong>Our model lifts 2D poses to 3D</strong>: We assume access to 2D poses from 2D images. These are easy to obtain and recent work has achieved very high levels of performance in estimating 2D poses from 2D images [].
+- <strong>Train-time Data</strong>: We assume access to multiple views of the same frame during training. Further, we also assume access to the camera intrinsic and extrinsic parameters used to capture these different scenes at training time. In our experiments, we try two approaches: (1) takes a single frame as input at a time, (2) takes a sequence of frames as input at a time (assuming access to video-feed of poses).
+- <strong>Test-time Data</strong>: We assume access to single views of the same frame during testing and no camera parameters. Further, we show in our experiments, that if indeed we have access to multiple views and camera parameters at test time, we can achieve enhanced performance on the test data.
+
+#### *Model*
 
 
 ### Why does it make sense? How does it relate to prior work?
@@ -44,3 +61,6 @@ However, most methods perform monocular reconstruction. They assume that only on
 
 
 ## Conclusion and Future Directions
+
+## References
+
