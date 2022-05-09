@@ -21,9 +21,9 @@ class Args:
     actions_train = 'Walk,Greet,Smok,Sit'.split(',')
     subjects_val = 'S11,S9'.split(',')
     actions_val = actions_train
-    n_epochs = 100
+    n_epochs = 25
     batch_size = 128
-    wandb = False
+    wandb = True
     visualize_frame = True
     viz_dir = 'data/visuals/'
     model_dir = 'data/saved_models/'
@@ -75,8 +75,8 @@ def run():
         ]}
     
     criterion = None
-    # device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    device = 'cpu'
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    # device = 'cpu'
     scheduler = None
         
     if args.model_type == 'baseline':

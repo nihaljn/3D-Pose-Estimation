@@ -26,7 +26,7 @@ def validate(epoch, dataloader, criterion, device, model, visualize_frame=False,
     if visualize_frame:
         assert dataset != None, 'Need dataset object to visualize'
         assert output_fp != None, 'Need path to visualization output file'
-        idx = min(12, pose_2d[0].shape[0] - 1)
+        idx = min(17, pose_2d[0].shape[0] - 1)
         data_2d = pose_2d[0][idx].unsqueeze(0).numpy()
         pred_3d = cam0_3d_pred[idx].unsqueeze(0).cpu().numpy()
         targ_3d = pose_3d[0][idx].unsqueeze(0).numpy()
