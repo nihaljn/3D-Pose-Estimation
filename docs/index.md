@@ -46,6 +46,20 @@ We make the following modeling assumptions in our approach:
 
 #### *Model*
 
+<img src="https://raw.githubusercontent.com/nihaljn/3D-Pose-Estimation/site/docs/files/model_diagram.png?token=GHSAT0AAAAAABQ3ZLRNTQYZSMXUAWO4OH46YTZNP3Q"></img>
+<em><strong>Figure []. Model Architecture.</strong> This diagram shows our simple model architecture taken from []. We take 2D poses with respect to a camera as input and estimate 3D poses as output with respect to the same camera.</em>
+
+Figure [] shows our model with its basic building blocks. The model design is such that it takes 2D poses as inputs and produces 3D poses as outputs. This approach, adapted from [], is based on a simple fully-connected neural network with batch normalization, dropout, Rectified Linear Units (RELUs), and residual connections []. There are two further layers: one to increase dimensionality to 512 just before the input to the model in the diagram, and one that projects the output of the model to get 3D poses. In our experiments we use 2 residual blocks, so we have a total of 4 linear layers.
+
+Having obtained estimates of 3D poses using this model, we can measure the quality of the estimates using the Mean Per-Joint Position Error (MPJPE), which is a popular metric in 3D pose estimation literature, and often referred to as protocol #1 []. MPJPE measure the average euclidean distance between the predicted and actual coordinates of each joint in the dataset. Mathematically,
+
+<img src="https://render.githubusercontent.com/render/math?math={\text{MPJPE} = \displaystyle \frac{1}{N*J} \sum_{i = 1}^N \sum_{j = 1}^J || y_i^j - \hat{y}_i^j ||}">
+
+where, <img src="https://render.githubusercontent.com/render/math?math={N, J}"> are the number of examples and joints respectively, and <img src="https://render.githubusercontent.com/render/math?math={\hat{y}, y}"> are the estimated pose and ground truth pose respectively. Note that the same formulation holds for poses in 3D or 2D.
+
+We train this model using two approaches:
+<strong>1. Baseline.</strong> 
+<strong>2. Without labels (ours).</strong>
 
 ### Why does it make sense? How does it relate to prior work?
 
