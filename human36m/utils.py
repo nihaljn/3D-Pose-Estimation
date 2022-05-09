@@ -40,7 +40,7 @@ def fetch_multiview(subjects, keypoints, dataset, action_filter):
     out_cameras = []
 
     for subject in subjects:
-        subject_id = subject[-2:]
+        subject_id = subject
         for action in keypoints[subject].keys():
             if action_filter is not None:
                 found = False
@@ -51,26 +51,26 @@ def fetch_multiview(subjects, keypoints, dataset, action_filter):
                 if not found:
                     continue
             poses_2d = keypoints[subject][action]
-            out_poses_2d.append(poses_2d)
-            if 'positions_3d' in dataset[subject][action]:
-                poses_3d = dataset[subject][action]['positions_3d']
-                assert len(poses_3d) == len(poses_2d), 'Camera count mismatch'
-                out_poses_3d.append(poses_3d)
+            out_poses_2d.append(list(poses_2d.values()))
+            
+            poses_3d = dataset[subject][action]
+            assert len(poses_3d) == len(poses_2d), 'Camera count mismatch'
+            out_poses_3d.append(list(poses_3d.values()))
 
-                camera_params = []
-                for cam_idx in range(3):
-                    in_cam = intrinsic_camera_params[cam_idx]
-                    ex_cam = extrinsic_camera_params[subject_id][cam_idx]
-                    c = np.concatenate((in_cam['focal_length'],
-                                      in_cam['center'],
-                                      in_cam['radial_distortion'],
-                                      in_cam['tangential_distortion'],
-                                      [in_cam['res_w']],
-                                      [in_cam['res_h']],
-                                       ex_cam['orientation'],
-                                       np.asarray(ex_cam['translation']/1000)))
-                    c = np.tile(c, (poses_3d[cam_idx].shape[0], 1))
-                    camera_params.append(c)
-                out_cameras.append(camera_params)
+            camera_params = []
+            for cam_idx in range(3):
+                in_cam = intrinsic_camera_params[cam_idx]
+                ex_cam = extrinsic_camera_params[subject_id][cam_idx]
+                c = np.concatenate((in_cam['focal_length'],
+                                  in_cam['center'],
+                                  in_cam['radial_distortion'],
+                                  in_cam['tangential_distortion'],
+                                  [in_cam['res_w']],
+                                  [in_cam['res_h']],
+                                   ex_cam['orientation'],
+                                   np.asarray(ex_cam['translation'])/1000))
+                c = np.tile(c, (poses_3d[f'cam_{cam_idx}'].shape[0], 1))
+                camera_params.append(c)
+            out_cameras.append(camera_params)
                 
     return out_poses_3d, out_poses_2d, out_cameras

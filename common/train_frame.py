@@ -1,10 +1,11 @@
 import os
 import torch
 import wandb
+from tqdm import tqdm
 
 from external.visualization import visualize
 from external.camera import camera_3d_to_camera_2d
-from humaneva.utils import convert_cam_to_viz_dict
+from common.utils import convert_cam_to_viz_dict
 from common.loss import *
 
 
@@ -40,9 +41,10 @@ def validate(epoch, dataloader, criterion, device, model, visualize_frame=False,
 def train(n_epochs, epoch, step_cnt, dataloader, criterion, device, model, optimizer, output_fp=None):
     total_loss = 0
     batch_cnt = 0
-    for pose_2d, pose_3d, cameras in dataloader:
+    for pose_2d, pose_3d, cameras in tqdm(dataloader):
         
         cam0_2d, cam1_2d, cam2_2d = pose_2d[0].to(device), pose_2d[1].to(device), pose_2d[2].to(device)
+        pose_2d[0], pose_2d[1], pose_2d[2] = pose_2d[0].to(device), pose_2d[1].to(device), pose_2d[2].to(device)
         cameras[0], cameras[1], cameras[2] = cameras[0].to(device), cameras[1].to(device), cameras[2].to(device)
         n_batch = cam0_2d.shape[0]
         
@@ -107,11 +109,11 @@ def run(n_epochs, train_loader, val_loader, criterion, device, model, optimizer,
     for epoch in range(n_epochs):
         
         # Training
-        # if epoch <= n_epochs // 2:
-        #     model.train()
-        # else:
-        # model.eval()
-        model.train()
+        if epoch <= n_epochs // 2:
+            model.train()
+        else:
+            model.eval()
+        # model.train()
             
         if model_output_dir != None:
             output_fp = os.path.join(model_output_dir, f'epoch_{epoch}.pth')

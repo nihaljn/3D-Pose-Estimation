@@ -21,7 +21,7 @@ class Args:
     actions_train = 'Walk,Greet,Smok,Sit'.split(',')
     subjects_val = 'S11,S9'.split(',')
     actions_val = actions_train
-    n_epochs = 150
+    n_epochs = 100
     batch_size = 128
     wandb = False
     visualize_frame = True
@@ -31,7 +31,7 @@ class Args:
     # ckpt_path = 'data/saved_models/absurd-voice-21/last_checkpoint.pth'
     ckpt_path = None
     lr = 3e-4
-    model_type = 'baseline' # or 'frame' or 'sequence'
+    model_type = 'frame' # 'baseline' or 'frame' or 'sequence'
     
     
 def run():
@@ -75,7 +75,8 @@ def run():
         ]}
     
     criterion = None
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    # device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device = 'cpu'
     scheduler = None
         
     if args.model_type == 'baseline':
@@ -95,6 +96,24 @@ def run():
             model = torch.load(args.ckpt_path).to(device)
         else:
             model = FrameModel(n_joints=17, linear_size=1024, dropout=0.5).to(device)
+            
+    elif args.model_type == 'frame':
+        from common.train_frame import run
+        poses_train_3d, poses_train_2d, cameras_train = fetch_multiview(args.subjects_train, keypoints, 
+                                                                        h36m_dataset, args.actions_train)
+        poses_val_3d, poses_val_2d, cameras_val = fetch_multiview(args.subjects_val, keypoints, 
+                                                                  h36m_dataset, args.actions_val)
+        train_dataset = MultiViewDataset(poses_train_2d, poses_train_3d, cameras_train, 
+                                     keypoints_metadata, h36m_dataset.skeleton(), h36m_dataset.fps())
+        train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=2)
+
+        val_dataset = MultiViewDataset(poses_val_2d, poses_val_3d, cameras_val, 
+                                     keypoints_metadata, h36m_dataset.skeleton(), h36m_dataset.fps())
+        val_dataloader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=2)
+        if args.ckpt_path != None:
+            model = torch.load(args.ckpt_path).to(device)
+        else:
+            model = FrameModel(n_joints=17, linear_size=1024, dropout=0.5, n_blocks=2).to(device)
         
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     run(args.n_epochs, train_dataloader, val_dataloader, criterion, device, model, optimizer, scheduler=scheduler, 
