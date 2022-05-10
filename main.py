@@ -11,11 +11,11 @@ def main():
 #         from humaneva.run import run
         
 #     run()
-    # from human36m.viz_gen import main as m
-    # m()
-    
-    from human36m.test_time_adapt import main as m
+    from human36m.viz_gen import main as m
     m()
+    
+    # from human36m.test_time_adapt import main as m
+    # m()
     
 
 if __name__ == '__main__':

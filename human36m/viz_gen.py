@@ -17,8 +17,8 @@ from external.visualization import visualize
 
 
 class Args:
-    viz_dir = 'data/visuals/report/still-night-65'
-    checkpoint_fp = 'data/saved_models/still-night-65/epoch_20.pth'
+    viz_dir = 'data/visuals/report/laced-sun-67'
+    checkpoint_fp = 'data/saved_models/laced-sun-67/epoch_4.pth'
     num_samples = 5
     annotations_path = 'data/human36m/annotations.pkl'
     subjects_train = 'S1,S5,S6,S7,S8'.split(',')
