@@ -81,7 +81,7 @@ We train this model using two approaches:
 
 <p>
 <center>
-<img src="files/model_algo.png"> height=200>
+<img src="files/model_algo.png" height=200>
 </center>
 
 <em><strong>Figure []. Model training procedure.</strong> We obtain estimates of 3D poses with respect to a particular camera, and rotate and project the 3D pose to obtain 2D poses with respect to different views. Our model is trained to ensure consistency across the different views.</em>
@@ -93,7 +93,7 @@ Here we discuss the loss function used to train the model using our approach sho
 
 Having obtained 2D pose estimates with respect to different views (a total of 9 2D pose estimates for 3 cameras), we train our model using the following loss:
 
-<img src="files/loss.png"> height=100>
+<img src="files/loss.png" height=100>
 
 Here, the first reconstruction term ensures that the estimated 2D poses after rotation and project match the ground truth 2D poses with respect to the target view. The second consistency terms enforces the model to learn 3D poses that are consistent with respect to the rotation and projection operations. We use differentiable versions of rotation and projection functions [] such that we can compute gradients of this loss function with repect to model weights and perform gradient descent.
 
@@ -138,7 +138,7 @@ During our experiments, we observed that training with Dropout activated to `0.5
 
 <p>
 <center>
-<img src="files/val_loss_dropout.png">
+<img src="files/val_loss_dropout.png" height=100>
 </center>
     
 <em><strong>Figure []. Validation Loss v/s Epoch for different training strategies with dropout.</strong> Training with dropout activated for half the number of epochs gives much better performance than other strategies. The purple curve traces a sharp drop after dropout was deactivated after epoch 75. Note purple and green curve overlap till epoch 75.</em>
@@ -148,18 +148,13 @@ During our experiments, we observed that training with Dropout activated to `0.5
 
 ### Quantitative Results
 
-<p>
-<center>
-    
 |Method|HumanEva-I (mm)|Human3.6M (mm)|
 |:----|:----:|:----:|
 |Baseline (with 3D labels) [] |24.48|49.12 [100 epochs]|
 |Ours (without labels) <br> Dropout = 0.0|65.22|-|
 |Ours (without labels) <br> Dropout = 0.5|80.07|-|
 |Ours (without labels) <br> Dropout = 0.5 -> 0.0|39.67|67.32 [20 epochs]|
-|Ours + Test Time Adaptation|**7.55** [200 epochs]||
-
-</center>
+|Ours + Test Time Adaptation|**7.55** [200 epochs]|**30.23** [5 epochs]|
     
 <em><strong>Table 1. Quantitative results.</strong> Each cell shows the MPJPE metric (protocol #1) measured in millimeters. Unless otherwise indicated, each setup was trained for 150 epochs. We skipped some experiments on Human3.6M and trained inconsistently due to compute and time constraints. </em>
 </p>
@@ -191,8 +186,10 @@ While numerically these results differ a lot, qualitatively these results look s
 
 |Input|Baseline|Ours|Ours + TTA|Ground Truth|
 |---|---|---|---|---|
-|<img src="files/he_ex0/input.gif">|<img src="files/he_ex0/baseline.gif" width=150>|<img src="files/he_ex0/ours.gif" width=160>|<img src="files/he_ex0/tta.gif" width=170>|<img src="files/he_ex0/gt.gif" width=130>|
-|<img src="files/he_ex1/input.gif">|<img src="files/he_ex1/baseline.gif" width=150>|<img src="files/he_ex1/ours.gif" width=170>|<img src="files/he_ex1/tta.gif" width=170>|<img src="files/he_ex1/gt.gif" width=150>|
+|<img src="files/hm_ex0/input.gif">|<img src="files/hm_ex0/baseline.gif" width=150>|<img src="files/hm_ex0/ours.gif" width=160>|<img src="files/hm_ex0/tta.gif" width=170>|<img src="files/hm_ex0/gt.gif" width=130>|
+|<img src="files/hm_ex1/input.gif">|<img src="files/hm_ex1/baseline.gif" width=150>|<img src="files/hm_ex1/ours.gif" width=170>|<img src="files/hm_ex1/tta.gif" width=170>|<img src="files/hm_ex1/gt.gif" width=150>|
+
+Here the flaws in the model predictions are more apparent. The neck, arm and knee joints are clearly off in the second example. We believe that training the model for more epochs will lead to better performance because we didn't perform early stopping for this dataset -- we had to stop training due to computational and time constraints.
 
 ## Conclusion and Future Directions
 
