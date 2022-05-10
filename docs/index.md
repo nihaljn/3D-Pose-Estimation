@@ -36,10 +36,11 @@ These methods assume access to ground truth 3D poses which is difficult to obtai
 
 Algorithms for 3D human pose estimation from single images have seen a great interest in recent times. In this section, we discuss the recent techniques that tackle this aspect. 
 
-There has been significant progress in the field of 3D human pose reconstruction from images in recent years[1, 2, 5]. [1] also attempt to estimate multi-person 3D human poses from single images. Further, [2, 5] focus on the task of reconstructing 3D human poses from video-feed data, which is directly related to the proposed problem.
+There has been significant progress in the field of 3D human pose reconstruction from images in recent years [1, 2, 5]. Similar to our work, [1] attempt to estimate multi-person 3D human poses from single images. Further, [2, 5] focus on the task of reconstructing 3D human poses from video-feed data, which is directly related to the proposed problem. While they achieve really good results on the task of 3D human pose estimation, they rely on access to 3D pose annotation which is expensive to gather. We differ from these works in that we want to estimate 3D poses without using any 3D labels.
 
-In this work, we focus on estimation of 3D poses by introducing a weakly-supervised multi-view training method. It is related in spirit but different in both task and methodology to the method on geometric supervision of monocular depth estimation from stereo views of [Garg et al.], the multi-view visual hull constraint used for reconstruction of static objects by [Yan et al.], and the differentiable ray-potential view-consistency used by [Tulsiani et al]. Weak supervision has been explored for pose estimation purposes in which involves complementing fully-annotated data with 2D pose annotations. Furthermore, [Simon et al.] iteratively improve a 2D pose detector through view consistency in a massive multiview studio, using RANSAC and manual intervention to remove outliers. While effective for imposing reprojection constraints during training, these methods still require extensive manual 2D annotation in the images featuring the target motions and knowledge of the external camera matrix. By contrast, the only manual intervention our approach requires is to supply the camera intrinsic parameters, which are either provided by the manufacturer or can be estimated using standard tools. 
+Some prior work has also attempted to perform 3D human pose estimation without using labels [10, 11]. [11] uses a complicated setup that involves projecting 3D poses to 2D via triangulations. [10] use a method that tries to jointly predict camera parameters and poses by performing bundle-adjustment using a neural refiner. [12] make use of epipolar geometry and triangulations to lift 2D poses to 3D in a self-supervised way. In contrast to these works, in this project we want to develop an intuitive strategy that can lift 2D poses to 3D without 3D supervision via a light-weight model. To enforce this, we use the simple baseline proposed in [2] as our model in most experiments.
 
+Our work is also related to the recent works in computer vision that use weakly-supervised learning and test-time adaptation [8, 9]. We borrow the popular intuitions of reconstruction and consistency errors that have been widely used in 3D computer vision.
 
 ## Idea
 
@@ -47,7 +48,7 @@ In this section, we go over the details of our method and how it relates to prio
 
 ### What is the idea?
 
-Our approach is based on the simple idea that multiple 2D views can be obtained from a single 3D view. Concretely, if we estimate some 3D pose of a frame, we should be able to rotate and project that 3D pose onto different views and obtain consistent 2D poses. Our model is trained using a loss function that captures this intuition. We next describe the details of our method in detail.
+Our approach is based on the simple idea that multiple 2D views can be obtained from a single 3D view. Concretely, if we estimate some 3D pose of a frame, we should be able to rotate (and translate) and project that 3D pose onto different views and obtain consistent 2D poses. Our model is trained using a loss function that captures this intuition. We next describe the details of our method in detail.
 
 #### *Assumptions*
 
@@ -77,14 +78,14 @@ We train this model using two approaches:
 
 <strong>1. Baseline.</strong> We follow the same approach as in [2], assuming access to 3D labels while training. This approach trains the model to minimize the MPJPE between the predicted 3D poses and the ground truth 3D poses.
 
-<strong>2. Without labels (ours).</strong> We would like to train this model without using any 3D supervision. Our proposed method relies on access to multiview 2D poses of the same scene. Thus, treating multiview 2D poses as input, we obtain multiview 3D pose estimates using our model. We train our model to ensure that these multiview 3D poses are consistent with respect to each other. Formally, we assume access to 2D poses with respect to 3 cameras <img src="https://render.githubusercontent.com/render/math?math={\mathcal{C}_i\ \ (i \in \{1, 2, 3\})}">, denoted as <img src="https://render.githubusercontent.com/render/math?math={x_i}">. Let the estimatated 3D pose with respect to <img src="https://render.githubusercontent.com/render/math?math={\mathcal{C}_i}"> be <img src="https://render.githubusercontent.com/render/math?math={\hat{y}_i = f(x_i)}"> where <img src="https://render.githubusercontent.com/render/math?math={f}"> is our model. Since we have access to the pose in 3D, we can rotate the pose and obtain the 2D pose with respect to some other camera. Let <img src="https://render.githubusercontent.com/render/math?math={\hat{x}_{i, j}}"> denote the estimated 2D pose with respect to <img src="https://render.githubusercontent.com/render/math?math={\mathcal{C}_j}"> obtained by rotating and projecting <img src="https://render.githubusercontent.com/render/math?math={\hat{y}_i}">. This procedure is shown visually in figure 3.
+<strong>2. Without labels (ours).</strong> We would like to train this model without using any 3D supervision. Our proposed method relies on access to multiview 2D poses of the same scene. Thus, treating multiview 2D poses as input, we obtain multiview 3D pose estimates using our model. We train our model to ensure that these multiview 3D poses are consistent with respect to each other. Formally, we assume access to 2D poses with respect to 3 cameras <img src="https://render.githubusercontent.com/render/math?math={\mathcal{C}_i\ \ (i \in \{1, 2, 3\})}">, denoted as <img src="https://render.githubusercontent.com/render/math?math={x_i}">. Let the estimatated 3D pose with respect to <img src="https://render.githubusercontent.com/render/math?math={\mathcal{C}_i}"> be <img src="https://render.githubusercontent.com/render/math?math={\hat{y}_i = f(x_i)}"> where <img src="https://render.githubusercontent.com/render/math?math={f}"> is our model. Since we have access to the pose in 3D, we can rotate (and translate) the pose and obtain the 2D pose with respect to some other camera. Let <img src="https://render.githubusercontent.com/render/math?math={\hat{x}_{i, j}}"> denote the estimated 2D pose with respect to <img src="https://render.githubusercontent.com/render/math?math={\mathcal{C}_j}"> obtained by rotating and projecting <img src="https://render.githubusercontent.com/render/math?math={\hat{y}_i}">. This procedure is shown visually in figure 3.
 
 <p>
 <center>
 <img src="files/model_algo.png" height=200>
 </center>
 
-<em><strong>Figure 3. Model training procedure.</strong> We obtain estimates of 3D poses with respect to a particular camera, and rotate and project the 3D pose to obtain 2D poses with respect to different views. Our model is trained to ensure consistency across the different views.</em>
+<em><strong>Figure 3. Model training procedure.</strong> We obtain estimates of 3D poses with respect to a particular camera, and rotate (and translate) and project the 3D pose to obtain 2D poses with respect to different views. Our model is trained to ensure consistency across the different views.</em>
 </p>
 
 #### *Loss*
@@ -109,7 +110,7 @@ In addition to training the model on the training data using our method, we can 
 
 So far we have only discussed single-frame models for 3D pose estimation. Current state-of-the-art methods such as [5] use multi-frame sequence models that leverage temporality to achieve enhanced performance on 3D pose estimation. Taking inspiration from these methods and leveraging the video feed data available in the datasets used by us, we attempted at performing 3D pose estimation using 2D pose sequences as input. Concretely, our sequence model takes a sequence of 2D poses as input and produces a sequence of 3D poses as output.
 
-Since transformer models [] have shown amazing performance in sequence modeling tasks, we attempt to use a transformer-based model for our problem. Our sequence model embeds each frame in a sequence of 2D poses to an embedding space. Then a transformer encoder encodes these embeddings using multi-head self-attention to produce embeddings which are processed by a decoder block (not transformer based) to obtain a sequence of 3D poses. Just like the model above, we can train this sequence model using the loss function and method proposed above. For exact details of this model architecture, please refer our code.
+Since transformer models [7] have shown amazing performance in sequence modeling tasks, we attempt to use a transformer-based model for our problem. Our sequence model embeds each frame in a sequence of 2D poses to an embedding space. Then a transformer encoder encodes these embeddings using multi-head self-attention to produce embeddings which are processed by a decoder block (not transformer based) to obtain a sequence of 3D poses. Just like the model above, we can train this sequence model using the loss function and method proposed above. For exact details of this model architecture, please refer our code.
 
 While we show preliminary results on these experiments, due to time constraints, we do not tune this model or experiment with it rigorously. We leave further experimentation in this direction for our future steps.
 
@@ -118,7 +119,7 @@ While we show preliminary results on these experiments, due to time constraints,
 
 Our approach is based on the simple idea that multiple 2D views can be obtained from a single 3D view. We assume that if the model can learn to predict consistent multiview 3D poses of the same scene independently, then it will have learned to lift 2D poses to 3D in general. 
 
-While 3D pose estimation is often done using 3D supervision, our method which relies on the above idea does not require 3D supervision. Our method of unsupervised training via rotation and projection is inspired from recent works in 3D computer vision []. Further, our method of test time adaptation is also popular among contemporary computer vision efforts []. However, to the best of our knowledge, these methods are unexplored for 3D human pose estimation.
+While 3D pose estimation is often done using 3D supervision, our method which relies on the above idea does not require 3D supervision. Our method of unsupervised training via rotation and projection is inspired from recent works in 3D computer vision [8]. Further, methods that perform test time adaptation are also popular among contemporary computer vision efforts [9]. However, to the best of our knowledge, these methods are unexplored for 3D human pose estimation.
 
 ## Experiments
 
@@ -147,7 +148,8 @@ During our experiments, we observed that training with Dropout activated to `0.5
 <p>
 <center>
 <img src="files/val_loss_dropout.png" height=200>
-    
+
+
 <em><strong>Figure 4. Validation Loss v/s Epoch for different training strategies with dropout.</strong> Training with dropout activated for half the number of epochs gives much better performance than other strategies. The purple curve traces a sharp drop after dropout was deactivated after epoch 75. Note purple and green curve overlap till epoch 75.</em>
 </center>
 </p>
@@ -162,8 +164,8 @@ During our experiments, we observed that training with Dropout activated to `0.5
 |Ours (without labels) <br> Dropout = 0.0|65.22|-|
 |Ours (without labels) <br> Dropout = 0.5|80.07|-|
 |Ours (without labels) <br> Dropout = 0.5 -> 0.0|**39.67**|**67.32** [20 epochs]|
-|Ours + Test Time Adaptation|**7.55** [200 epochs]|**30.23** [5 epochs]|
 |Ours + Sequence Model|88.49|-|
+|Ours + Test Time Adaptation|**7.55** [200 epochs]|**30.23** [5 epochs]|
 
 <em><strong>Table 1. Quantitative results.</strong> Each cell shows the MPJPE metric (protocol #1) measured in millimeters. Unless otherwise indicated, each setup was trained for 150 epochs. We skipped some experiments on Human3.6M and trained inconsistently due to compute and time constraints. </em>
 
@@ -203,7 +205,19 @@ Here the flaws in the model predictions are more apparent. The neck, arm and kne
 
 3D computer vision has recently seen increasing popularity due to the rise of self-driving cars, AR/VR applications etc. This makes 3D computer vision problems like 3D human pose estimation very crucial. However, obtaining 3D annotations for human poses is expensive and cumbersome. Towards resolving this problem, in this project, we have explored estimating 3D poses without using any labels. From our proposed approach that involves rotation and projection of 3D human poses, we have shown we can achieve competitive performance when compared to methods that use 3D supervision. Further, since we do not require labels, we can train our model on test examples of interest and achieve enhanced performance on them.
 
-We note here that we have proposed a model that is single-frame and single-view (without test time adaptation) and single-frame and multi-view (with test time adaptation). Contemporary state-of-the-art methods such as [5] use multi-frame models that leverage sequence information. While we performed initial experiments using a sequence model, we expect it to perform better than the other methods. Further, our method requires access to camera information which can be cumbersome to obtain and is often called upon as a critique of such methods. Towards mitigating these issues, we can explore the following future directions:
+We note here that we have proposed a model that is single-frame and single-view (without test time adaptation) and single-frame and multi-view (with test time adaptation). Contemporary state-of-the-art methods such as [5, 13] use multi-frame models that leverage sequence information. While we performed initial experiments using a sequence model, we expect it to perform better than the other methods. We have identified potential pitfalls in our intial experiments as discussed above, and we aim to work towards rectifying them. We summarize our results in context of current state-of-the-art methods in table 2.
+
+|Method|HumanEva-I (mm)|Human3.6M (mm)|
+|:----|:----:|:----:|
+|Ours <br> Single frame + Single view|39.67|67.32 [20 epochs]|
+|Ours + Test Time Adaptation <br> Single frame + Multi view|7.55 [200 epochs]|30.23 [5 epochs]|
+|Ours + Sequence Model <br> Multi frame + Single view|88.49|-|
+|StridedTransformer [5] <br> Multi frame + Single view|12.2|43.7|
+|TesseTrack [13] <br> Multi frame + Multi view|-|18.7|
+
+<em><strong>Table 2. Comparison with state-of-the-art.</strong> While our single-frame model achieves competitive performance, our multi-frame model does not do well.</em>
+
+Further, our method requires access to camera information which can be cumbersome to obtain and is often called upon as a critique of such methods. Towards mitigating these issues, we can explore the following future directions:
 
 (1) Obtaining enhanced performance using multi-frame models: we can leverage the recent success of transformer models that process sequence data using self-attention by resolving the issues with our attempts identified above.
 
@@ -222,3 +236,15 @@ We note here that we have proposed a model that is single-frame and single-view 
 [5] W. Li, H. Liu, R. Ding, M. Liu, P. Wang and W. Yang, "Exploiting Temporal Contexts with Strided Transformer for 3D Human Pose Estimation," in IEEE Transactions on Multimedia, doi: 10.1109/TMM.2022.3141231.
 
 [6] He, Kaiming, et al. "Deep residual learning for image recognition." Proceedings of the IEEE conference on computer vision and pattern recognition. 2016.
+
+[7] Vaswani, Ashish, et al. "Attention is all you need." Advances in neural information processing systems 30 (2017).
+
+[8] Caliskan, Akin, et al. "Multi-view consistency loss for improved single-image 3d reconstruction of clothed people." Proceedings of the Asian Conference on Computer Vision. 2020.
+
+[9] Azimi, Fatemeh, et al. "Self-Supervised Test-Time Adaptation on Video Data." Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision. 2022.
+
+[10] Usman, Ben, et al. "MetaPose: Fast 3D Pose from Multiple Views without 3D Supervision." arXiv preprint arXiv:2108.04869 (2021).
+
+[11] Bouazizi, Arij, Ulrich Kressel, and Vasileios Belagiannis. "Learning Temporal 3D Human Pose Estimation with Pseudo-Labels." 2021 17th IEEE International Conference on Advanced Video and Signal Based Surveillance (AVSS). IEEE, 2021.
+
+[12] Kocabas, Muhammed, Salih Karagoz, and Emre Akbas. "Self-supervised learning of 3d human pose using multi-view geometry." Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2019.
