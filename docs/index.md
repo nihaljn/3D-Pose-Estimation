@@ -4,7 +4,9 @@
 |:---:|:---:|:---:|
 |nihalj@andrew.cmu.edu|mfaiz@andrew.cmu.edu|titasc@andrew.cmu.edu|
 
-<em>You can also view the report on our website: https://nihaljn.github.io/3D-Pose-Estimation/</em>
+<em>Website: https://nihaljn.github.io/3D-Pose-Estimation/</em>
+
+<em>Code: https://github.com/nihaljn/3D-Pose-Estimation/</em>
 
 <!-- 
 Motivation: Why is it important and relevant? Why should we care?
