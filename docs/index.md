@@ -189,7 +189,7 @@ While numerically these results differ a lot, qualitatively these results look s
 |<img src="files/hm_ex0/input.gif">|<img src="files/hm_ex0/baseline.gif" width=150>|<img src="files/hm_ex0/ours.gif" width=160>|<img src="files/hm_ex0/tta.gif" width=170>|<img src="files/hm_ex0/gt.gif" width=130>|
 |<img src="files/hm_ex1/input.gif">|<img src="files/hm_ex1/baseline.gif" width=150>|<img src="files/hm_ex1/ours.gif" width=170>|<img src="files/hm_ex1/tta.gif" width=170>|<img src="files/hm_ex1/gt.gif" width=150>|
 
-Here the flaws in the model predictions are more apparent. The neck, arm and knee joints are clearly off in the second example. We believe that training the model for more epochs will lead to better performance because we didn't perform early stopping for this dataset -- we had to stop training due to computational and time constraints.
+Here the flaws in the model predictions are more apparent. The neck, arm and knee joints are clearly off in the second example. We believe that training the model for more epochs will lead to better performance because we didn't perform early stopping for this dataset -- we had to stop training due to computational and time constraints. However, the predictions with test time adaptation are much enhanced.
 
 ## Conclusion and Future Directions
 
