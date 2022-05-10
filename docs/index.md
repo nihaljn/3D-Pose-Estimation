@@ -105,6 +105,15 @@ Note that this training method does not use ground truth 3D labels and only uses
 In addition to training the model on the training data using our method, we can also train the model on the test data at test time to achieve enhanced performance on the test examples of interest. This is possible because our method does not rely on ground-truth labels for lifting 2D poses to 3D. Surely, this enhanced performance would be limited to the test data at hand and wouldn't generalize to other unseen examples. Nevertheless, we show in our experiments that we can achieve really good performance on the test set examples in the datasets we use.
 
 
+#### *Aside: Towards Sequence Modeling*
+
+So far we have only discussed single-frame models for 3D pose estimation. Current state-of-the-art methods such as [5] use multi-frame sequence models that leverage temporality to achieve enhanced performance on 3D pose estimation. Taking inspiration from these methods and leveraging the video feed data available in the datasets used by us, we attempted at performing 3D pose estimation using 2D pose sequences as input. Concretely, our sequence model takes a sequence of 2D poses as input and produces a sequence of 3D poses as output.
+
+Since transformer models [] have shown amazing performance in sequence modeling tasks, we attempt to use a transformer-based model for our problem. Our sequence model embeds each frame in a sequence of 2D poses to an embedding space. Then a transformer encoder encodes these embeddings using multi-head self-attention to produce embeddings which are processed by a decoder block (not transformer based) to obtain a sequence of 3D poses. Just like the model above, we can train this sequence model using the loss function and method proposed above. For exact details of this model architecture, please refer our code.
+
+While we show preliminary results on these experiments, due to time constraints, we do not tune this model or experiment with it rigorously. We leave further experimentation in this direction for our future steps.
+
+
 ### Why does it make sense? How does it relate to prior work?
 
 Our approach is based on the simple idea that multiple 2D views can be obtained from a single 3D view. We assume that if the model can learn to predict consistent multiview 3D poses of the same scene independently, then it will have learned to lift 2D poses to 3D in general. 
@@ -137,10 +146,10 @@ During our experiments, we observed that training with Dropout activated to `0.5
 
 <p>
 <center>
-<img src="files/val_loss_dropout.png" height=300>
-</center>
+<img src="files/val_loss_dropout.png" height=200>
     
 <em><strong>Figure 4. Validation Loss v/s Epoch for different training strategies with dropout.</strong> Training with dropout activated for half the number of epochs gives much better performance than other strategies. The purple curve traces a sharp drop after dropout was deactivated after epoch 75. Note purple and green curve overlap till epoch 75.</em>
+</center>
 </p>
 
 ## Results
@@ -154,6 +163,7 @@ During our experiments, we observed that training with Dropout activated to `0.5
 |Ours (without labels) <br> Dropout = 0.5|80.07|-|
 |Ours (without labels) <br> Dropout = 0.5 -> 0.0|**39.67**|**67.32** [20 epochs]|
 |Ours + Test Time Adaptation|**7.55** [200 epochs]|**30.23** [5 epochs]|
+|Ours + Sequence Model|88.49|-|
 
 <em><strong>Table 1. Quantitative results.</strong> Each cell shows the MPJPE metric (protocol #1) measured in millimeters. Unless otherwise indicated, each setup was trained for 150 epochs. We skipped some experiments on Human3.6M and trained inconsistently due to compute and time constraints. </em>
 
@@ -164,6 +174,7 @@ Table 1 shows the quantitative results obtained for our experiments on the two d
 2. Our method performs slightly worse than the baseline approach. However, we believe that we perform well because (a) the baseline model has access to 3D labels while training whereas we assume no access to 3D supervision anywhere, and (b) while at train time our model assumes access to multi-view information, at test time our model is also a single-view model like the baseline making it a fair comparison.
 3. If we assume access to multiple views and camera information at test time, training the model on the test data helps in achieving significantly enhanced performance on the test data. While this is expected because we are training on the test data, we note this is possible because our method does not require labels. A caveat to this is that, this cannot be extended to a setup where real-time 3D pose estimation is necessary because training the model on the test data cannot happen on the fly.
 4. We were unable to perform rigourous experiments on Human3.6M dataset because (1) it was hard to obtain in time due to unresponsiveness of the dataset authors and (2) the dataset is much bigger than HumanEva-I making it computationally challenging for us to run experiments.
+5. Our transformer-based sequence model fails to perform well. However, since it is a multi-frame model we would expect it to perform better than the other single-frame models. We believe that this model fails because (1) due to time constraints we do not tune this model very rigorously; during experiments we observed that this model is very sensitive to hyperparameters, so further tuning may improve performance, and (2) the current model architecture used by us involves multi-head self-attention only in the encoding stage -- incorporating attention in the decoding phase may further improve performance.
 
 
 ### Qualitative Results
@@ -192,11 +203,11 @@ Here the flaws in the model predictions are more apparent. The neck, arm and kne
 
 3D computer vision has recently seen increasing popularity due to the rise of self-driving cars, AR/VR applications etc. This makes 3D computer vision problems like 3D human pose estimation very crucial. However, obtaining 3D annotations for human poses is expensive and cumbersome. Towards resolving this problem, in this project, we have explored estimating 3D poses without using any labels. From our proposed approach that involves rotation and projection of 3D human poses, we have shown we can achieve competitive performance when compared to methods that use 3D supervision. Further, since we do not require labels, we can train our model on test examples of interest and achieve enhanced performance on them.
 
-We note here that we have proposed a model that is single-frame and single-view (without test time adaptation) and single-frame and multi-view (with test time adaptation). Contemporary state-of-the-art methods such as [5] use multi-frame models that leverage sequence information. Further, our method requires access to camera information which can be cumbersome to obtain and is often called upon as a critique of such methods. Towards mitigating these issues, we can explore the following future directions:
+We note here that we have proposed a model that is single-frame and single-view (without test time adaptation) and single-frame and multi-view (with test time adaptation). Contemporary state-of-the-art methods such as [5] use multi-frame models that leverage sequence information. While we performed initial experiments using a sequence model, we expect it to perform better than the other methods. Further, our method requires access to camera information which can be cumbersome to obtain and is often called upon as a critique of such methods. Towards mitigating these issues, we can explore the following future directions:
 
-(1) Obtaining enhanced performance using multi-frame models. We can leverage the recent success of transformer models that process sequence data using self-attention.
+(1) Obtaining enhanced performance using multi-frame models: we can leverage the recent success of transformer models that process sequence data using self-attention by resolving the issues with our attempts identified above.
 
-(2) We can treat the camera properties and learnable parameters and have the model estimate these while training.
+(2) We can treat the camera properties as learnable parameters and have the model estimate these while training.
 
 ## References
 
