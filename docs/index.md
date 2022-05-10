@@ -4,6 +4,8 @@
 |:---:|:---:|:---:|
 |nihalj@andrew.cmu.edu|mfaiz@andrew.cmu.edu|titasc@andrew.cmu.edu|
 
+<em>You can also view the report on our website: https://nihaljn.github.io/3D-Pose-Estimation/</em>
+
 <!-- 
 Motivation: Why is it important and relevant? Why should we care?
 Prior Work: Briefly mention related works that are relevant to your idea instead of covering all related works.
