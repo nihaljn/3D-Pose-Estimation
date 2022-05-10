@@ -2,7 +2,7 @@
 
 |Nihal Jain|Talha Faiz|Titas Chakraborty|
 |:---:|:---:|:---:|
-|nihalj@andrew.cmu.edu|mfaiz@andrew.cmu.edu||
+|nihalj@andrew.cmu.edu|mfaiz@andrew.cmu.edu|titasc@andrew.cmu.edu|
 
 <!-- 
 Motivation: Why is it important and relevant? Why should we care?
@@ -102,7 +102,7 @@ Note that this training method does not use ground truth 3D labels and only uses
 
 #### *Test Time Adaptation*
 
-In addition to training the model on the training data using our method, we can also train the model on the test data at test time to achieve enhanced performance on the test examples of interest. This is possible because our method does not rely on ground-truth labels for lifting 2D poses to 3D. Surely, this enhanced performance would be limited to the test data at hand and wouldn't generalize to other unseen examples. Nevertheless, we show in our experiments that we can achieve really good performance on the test set examples in the datasets we use.
+In addition to training the model on the training data using our method, we can also train the model on the test data at test time to achieve enhanced performance on the test examples of interest. This is possible because our method does not rely on ground-truth labels for lifting 2D poses to 3D. This enhanced performance would be limited to the test data at hand and wouldn't generalize to other unseen examples. Nevertheless, we show in our experiments that we can achieve really good performance on the test set examples in the datasets we use.
 
 
 ### Why does it make sense? How does it relate to prior work?
