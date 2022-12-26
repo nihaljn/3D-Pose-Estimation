@@ -7,7 +7,7 @@
 In this project, we propose a 3D pose estimation framework which relies only on 2D supervision and does not assume access to 3D ground truth labels. Our results showcase that our model, trained using multi-view camera images is competitive with 3D supervised methods using single-view images at test time. If we assume multi-view images at test time, our method performs much better than 3D supervised methods on the specific examples of interest. Figure below shows an illustration of our expected inputs and outputs.
 
 <p>
-<center><img src="assets/intro.gif">
+<center><img src="assets/intro.png">
 
 <small>Figure 1. 3D pose estimation (right) from 2D poses (left). </small>
 </center>
