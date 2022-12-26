@@ -16,7 +16,7 @@ from common.loss import mpjpe
 
 
 class Args:
-    annotations_path = 'data/human36m/annotations.pkl'
+    annotations_path = 'data/annotations.pkl'
     subjects_train = 'S1,S5,S6,S7,S8'.split(',')
     actions_train = 'Walk,Greet,Smok,Sit'.split(',')
     subjects_val = 'S11,S9'.split(',')

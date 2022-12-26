@@ -8,12 +8,12 @@ import wandb
 from external.camera import *
 from external.humaneva_dataset import HumanEvaDataset
 from common.model import FrameModel
-from dataset import MultiViewDataset
+from common.dataset import MultiViewDataset
 from common.utils import set_seed
 from humaneva.utils import *
 from common.loss import *
 from external.visualization import visualize
-from humaneva.train_frame import train, validate
+from common.train_frame import train, validate
 
 
 class Args:
@@ -25,7 +25,7 @@ class Args:
     actions_val = actions_train
     n_epochs = 200
     batch_size = 64
-    wandb = True
+    wandb = False
     visualize_frame = True
     viz_dir = 'data/visuals/'
     model_dir = 'data/saved_models/'

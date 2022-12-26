@@ -1,6 +1,6 @@
 class Args:
-    dataset = 'human36m'
-    method = 'test_time_adapt' # or 'train' or 'viz'
+    dataset = 'humaneva'
+    method = 'train' # or 'train' or 'viz'
 
 
 def main():

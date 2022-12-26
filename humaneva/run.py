@@ -1,22 +1,23 @@
-import numpy as np
 import os
-import torch
 import sys
-from torch.utils.data import DataLoader
-import wandb
 
-from external.camera import world_to_camera, normalize_screen_coordinates
-from external.humaneva_dataset import HumanEvaDataset
-from common.model import FrameModel, SequenceModel
-from humaneva.dataset import MultiViewDataset, FrameDataset
-from humaneva.utils import fetch_multiview, fetch
-from common.utils import set_seed
+import numpy as np
+import torch
+import wandb
+from torch.utils.data import DataLoader
+
+from common.dataset import FrameDataset, MultiViewDataset
 from common.loss import mpjpe
+from common.model import FrameModel, SequenceModel
+from common.utils import set_seed
+from external.camera import normalize_screen_coordinates, world_to_camera
+from external.humaneva_dataset import HumanEvaDataset
+from humaneva.utils import fetch, fetch_multiview
 
 
 class Args:
-    dataset_path = 'data/data_3d_humaneva15.npz'
-    dataset_2d_path = 'data/data_2d_humaneva15_gt.npz'
+    dataset_path = 'humaneva/data/data_3d_humaneva15.npz'
+    dataset_2d_path = 'humaneva/data/data_2d_humaneva15_gt.npz'
     subjects_train = 'Train/S1,Train/S2,Train/S3'.split(',')
     actions_train = 'Walk,Jog,Box'.split(',')
     subjects_val = 'Validate/S1,Validate/S2,Validate/S3'.split(',')
@@ -25,8 +26,8 @@ class Args:
     batch_size = 128
     wandb = False
     visualize_frame = True
-    viz_dir = 'data/visuals/'
-    model_dir = 'data/saved_models/'
+    viz_dir = 'humaneva/data/visuals/'
+    model_dir = 'humaneva/data/saved_models/'
     seed = 982356147
     # ckpt_path = 'data/saved_models/absurd-voice-21/last_checkpoint.pth'
     ckpt_path = None
@@ -80,7 +81,7 @@ def run():
     scheduler = None
     
     if args.model_type == 'frame':
-        from humaneva.train_frame import run
+        from common.train_frame import run
         poses_train_3d, poses_train_2d, cameras_train = fetch_multiview(args.subjects_train, keypoints, 
                                                                         he_dataset, args.actions_train)
         poses_val_3d, poses_val_2d, cameras_val = fetch_multiview(args.subjects_val, keypoints, 
@@ -98,7 +99,7 @@ def run():
             model = FrameModel(n_joints=15, linear_size=1024, dropout=0.5, n_blocks=2).to(device)
         
     elif args.model_type == 'baseline':
-        from humaneva.train_baseline import run
+        from common.train_baseline import run
         criterion = mpjpe
         poses_train_3d, poses_train_2d, cameras_train = fetch(args.subjects_train, keypoints, 
                                                               he_dataset, args.actions_train)
@@ -116,7 +117,7 @@ def run():
             model = FrameModel(n_joints=15, linear_size=1024, dropout=0.5).to(device)
         
     elif args.model_type == 'sequence':
-        from humaneva.train_sequence import run
+        from common.train_sequence import run
         poses_train_3d, poses_train_2d, cameras_train = fetch_multiview(args.subjects_train, keypoints, 
                                                                         he_dataset, args.actions_train)
         poses_val_3d, poses_val_2d, cameras_val = fetch_multiview(args.subjects_val, keypoints, 

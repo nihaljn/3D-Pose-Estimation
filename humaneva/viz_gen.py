@@ -8,7 +8,7 @@ import wandb
 from external.camera import *
 from external.humaneva_dataset import HumanEvaDataset
 from common.model import FrameModel
-from humaneva.dataset import MultiViewDataset
+from common.dataset import MultiViewDataset
 from humaneva.utils import *
 from common.utils import set_seed
 from common.loss import *
