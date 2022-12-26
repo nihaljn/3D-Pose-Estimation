@@ -1,29 +1,30 @@
-import numpy as np
 import os
-import torch
 import sys
-from torch.utils.data import DataLoader
-import wandb
 
+import numpy as np
+import torch
+import wandb
+from torch.utils.data import DataLoader
+
+from common.dataset import MultiViewDataset
+from common.loss import *
+from common.model import FrameModel
+from common.utils import set_seed
 from external.camera import *
 from external.humaneva_dataset import HumanEvaDataset
-from common.model import FrameModel
-from common.dataset import MultiViewDataset
-from humaneva.utils import *
-from common.utils import set_seed
-from common.loss import *
 from external.visualization import visualize
+from humaneva.utils import *
 
 
 class Args:
-    dataset_path = 'data/data_3d_humaneva15.npz'
-    dataset_2d_path = 'data/data_2d_humaneva15_gt.npz'
+    dataset_path = 'humaneva/data/data_3d_humaneva15.npz'
+    dataset_2d_path = 'humaneva/data/data_2d_humaneva15_gt.npz'
     subjects_train = 'Train/S1,Train/S2,Train/S3'.split(',')
     actions_train = 'Walk,Jog,Box'.split(',')
     subjects_val = 'Validate/S1,Validate/S2,Validate/S3'.split(',')
     actions_val = actions_train
-    viz_dir = 'data/visuals/presentation/divine-donkey-50'
-    checkpoint_fp = 'data/saved_models/divine-donkey-50/epoch_149.pth'
+    viz_dir = 'humaneva/data/visuals/presentation'
+    checkpoint_fp = 'humaneva/data/saved_models/epoch_149.pth'
     seed = 982356147
     num_samples = 5
     
@@ -38,7 +39,7 @@ def visualize_frames(num_samples, dataloader, device, model, dataset, viz_output
         cams = [None, None, None]
         cams[0], cams[1], cams[2] = cameras[0][0].to(device), cameras[0][1].to(device), cameras[0][2].to(device)
         n_frames = cams[0].shape[0]
-        all_cam_2d = torch.cat((cam0_2d, cam1_2d, cam2_2d), dim=0)
+        all_cam_2d = torch.cat((cam0_2d, cam1_2d, cam2_2d), dim=0).unsqueeze(0)
         
         all_cam_3d_pred = model(all_cam_2d)
         # recovering per camera predictions

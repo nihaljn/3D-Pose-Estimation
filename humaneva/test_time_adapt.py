@@ -17,8 +17,8 @@ from common.train_frame import train, validate
 
 
 class Args:
-    dataset_path = 'data/data_3d_humaneva15.npz'
-    dataset_2d_path = 'data/data_2d_humaneva15_gt.npz'
+    dataset_path = 'humaneva/data/data_3d_humaneva15.npz'
+    dataset_2d_path = 'humaneva/data/data_2d_humaneva15_gt.npz'
     subjects_train = 'Train/S1,Train/S2,Train/S3'.split(',')
     actions_train = 'Walk,Jog,Box'.split(',')
     subjects_val = 'Validate/S1,Validate/S2,Validate/S3'.split(',')
@@ -27,11 +27,11 @@ class Args:
     batch_size = 64
     wandb = False
     visualize_frame = True
-    viz_dir = 'data/visuals/'
-    model_dir = 'data/saved_models/'
-    checkpoint_fp = 'data/saved_models/fancy-frog-40/epoch_149.pth'
+    viz_dir = 'humaneva/data/visuals/'
+    model_dir = 'humaneva/data/saved_models/'
+    checkpoint_fp = 'humaneva/data/saved_models/epoch_149.pth'
     seed = 982356147
-    adapt_example = False
+    adapt_example = True
     
     
 def adapt(n_epochs, model_output_dir, dataloader, device, model, optimizer, use_wandb=False):
@@ -59,11 +59,11 @@ def adapt_example(n_epochs, pose_2d, pose_3d, cameras, device, model, optimizer,
     cameras[0], cameras[1], cameras[2] = cameras[0].to(device), cameras[1].to(device), cameras[2].to(device)
     n_batch = cameras[0].shape[0]
     # concatenating to pass as a single batch instead of 3 separate forward passes
-    all_cam_2d = torch.cat((cam0_2d, cam1_2d, cam2_2d), dim=0)
+    all_cam_2d = torch.cat((cam0_2d, cam1_2d, cam2_2d), dim=0).unsqueeze(0)
     assert n_batch == 1
     
     for epoch in range(n_epochs):
-        
+        print(all_cam_2d.shape)
         all_cam_3d_pred = model(all_cam_2d)
         # recovering per camera predictions
         cam_3d_preds = [all_cam_3d_pred[:1], all_cam_3d_pred[1:2], all_cam_3d_pred[2:]]

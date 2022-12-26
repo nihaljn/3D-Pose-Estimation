@@ -1,11 +1,14 @@
-class Args:
-    dataset = 'humaneva'
-    method = 'train' # or 'train' or 'viz'
-
+import argparse
 
 def main():
     
-    args = Args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dataset', type=str, help='Dataset type to use',
+        choices=['humaneva', 'human36m'], required=True)
+    parser.add_argument('--method', type=str, help='Whether to train/visualize/adapt',
+        choices=['test_time_adapt', 'viz', 'train'], required=True)
+    args = parser.parse_args()
+    
     if args.dataset == 'human36m':
         if args.method == 'test_time_adapt':
             from human36m.test_time_adapt import main as m
